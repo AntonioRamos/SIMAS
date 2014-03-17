@@ -1,20 +1,32 @@
-function initialize() {
+/*globals kendo, document, TwitterSearchViewModel, SearchResultsViewModel, TweetViewModel  */
 
-  if (cordova.platformId === "windowsphone") {
-    console.log("Windows Phone 8");
-    $(".addRemoveFave").text("Fave");
-  }
+// create the mobile app
+var app = new kendo.mobile.Application(document.body, { transition: "slide" });
 
-  var app = new $.mvc.app();
+var formatter = new Formatter();
+var favouritesService = new FavouritesService();
+var searchViewModel = new SearchViewModel();
+var resultsViewModel = new ResultsViewModel();
+var propertyViewModel = new PropertyViewModel();
+var favouritesViewModel = new FavouritesViewModel();
 
-  app.loadControllers(["searchService", "search", "results", "favourites", "formatter"]);
-  app.loadModels(["property", "recentSearch", "favourites"]);
 
-  if (navigator.splashscreen) {
-    $(document).ready(function() {
-      app.ready(navigator.splashscreen.hide);
-    });
-  }
-}
 
-document.addEventListener("deviceready", initialize, false);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
