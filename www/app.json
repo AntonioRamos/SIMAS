@@ -1,1 +1,1 @@
-{"id":"1f387e0f-888b-4056-bef3-53aeaa908024","js":[{"path":"app.js","update":"full","version":"05c1f0726ad5bd5905bcf9bf4b4e63267663cc07"}],"css":[{"path":"resources/css/app.css","update":"full","version":"faf42bb4addf21258bc1334dcf5660fddf0f393f"}]}
+{"id":"58752009-0d7d-4f08-b27b-a185813780a0","js":[{"path":"cordova.js","remote":true},{"path":"app.js","update":"full","version":"da39a3ee5e6b4b0d3255bfef95601890afd80709"},{"path":"app.js"}],"css":[{"path":"resources/css/app.css","update":"delta","version":"c9e993445545305f20204675bacdf9ce70959fa3"}]}
