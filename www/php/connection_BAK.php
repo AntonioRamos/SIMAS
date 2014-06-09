@@ -1,11 +1,12 @@
 <?php
 
-    $hostname = "SIMASProject.db.6133599.hostedresource.com";
-    $username = "SIMASProject";
-    $dbname = "SIMASProject";
-    $password = "EIpl2081043@";
+    $server = "127.0.0.1";
+    $user = "root";
+    $password = "";
 
-    mysql_connect($hostname, $username, $password) OR DIE ("Unable to connect to database! Please try again later.");
-    mysql_select_db($dbname);
+    $db = "myapp";
+
+    $connection = mysql_connect($server,$user,$password) or die (mysql_error());
+    $database = mysql_select_db($db, $connection) or die(mysql_error());
 
 ?>
