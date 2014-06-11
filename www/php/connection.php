@@ -1,5 +1,8 @@
 <?php
 
+    header('Access-Control-Allow-Origin: *');
+    header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+
     $hostname = "SIMASProject.db.6133599.hostedresource.com";
     $username = "SIMASProject";
     $dbname = "SIMASProject";
