@@ -73646,6 +73646,7 @@ Ext.define('MyApp.controller.EscalaNumerica', {
                 var loginResponse = Ext.JSON.decode(response.responseText);
 
                 if (loginResponse) {
+                    alert("1");
                     Ext.device.Notification.show({
                         title: 'Informação',
                         buttons: Ext.MessageBox.OK,
@@ -73653,12 +73654,20 @@ Ext.define('MyApp.controller.EscalaNumerica', {
                     });
                     Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
                 } else {
+                    alert("2");
                     Ext.device.Notification.show({
                         title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala'
                     });
                 }
+            },
+            failure: function(response, opts) {
+                Ext.device.Notification.show({
+                    title: 'Informação',
+                    buttons: Ext.MessageBox.OK,
+                    message: 'server-side failure with status code'+ response.status
+                });
             }
         });
     }
