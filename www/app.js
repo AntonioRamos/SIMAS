@@ -73630,11 +73630,10 @@ Ext.define('MyApp.controller.EscalaNumerica', {
 
         var me = this;
 
-        Ext.Ajax.useDefaultXhrHeader = false;
-
         Ext.Ajax.request({
-            url: 'php/createResult.php',
-            header:'',
+            url: 'http://www.antonio-ramos.com/sencha/php/createResult.php',
+            useDefaultXhrHeader: false,
+//            withCredentials: false,
             method: 'post',
             params: {
                 result: result,
