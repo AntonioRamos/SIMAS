@@ -72453,7 +72453,7 @@ Ext.define('Ext.viewport.Viewport', {
 Ext.define('MyApp.view.Main', {
     extend:  Ext.tab.Panel ,
     alias: 'widget.mainMenuView',
-                                                                                      
+                                                                                    
     config: {
         tabBarPosition: 'bottom',
         itemId: 'configPanel',
@@ -72491,14 +72491,14 @@ Ext.define('MyApp.view.Main', {
                     }
 
                 ],
-                listeners: {
+                /*listeners: {
                     initialize: function () {
                         Ext.Viewport.setMenu(this.createMenu('left'), {
                             side: 'left',
                             reveal: true
                         });
                     }
-                },
+                },*/
                 createMenu: function (side) {
                     var items = [
                         {
