@@ -73500,11 +73500,22 @@ Ext.define('MyApp.view.EscalaVerbal', {
                 maximumDuration: 10, // limit to 10 seconds per recording
                 success: function (files) {
                     for (var i = 0; i < files.length; i++) {
-                        console.log('Captured audio path: ', files[i].fullPath);
-                        var r = new FileReader();
-                        r.readAsBinaryString(files[i].fullPath);
+                        Ext.device.Notification.show({
+                            title: 'Informação',
+                            buttons: Ext.MessageBox.OK,
+                            message: 'Captured audio path: '+ files[i].fullPath
+                        });
+//                        console.log('Captured audio path: ', files[i].fullPath);
+//                        var r = new FileReader();
+//                        r.readAsBinaryString(files[i].fullPath);
+                        var reader = new FileReader();
+                        reader.onloadend = function(evt) {
+                            console.log("read success");
+                            console.log(evt.target.result);
+                        };
+                        reader.readAsDataURL(files[i].fullPath);
 
-                        var blob = new Blob ( [ r ], { type : 'audio/mp4' } );
+                        var blob = new Blob ( [ files[i].fullPath ], { type : 'audio/mp4' } );
 
                         // new sencha
                         var userID = 1;
@@ -73516,11 +73527,11 @@ Ext.define('MyApp.view.EscalaVerbal', {
 
                         me.fireEvent('onSubmitCommandDevice', me, url, userID,mimeType);
 
-                        /*Ext.device.Notification.show({
+                        Ext.device.Notification.show({
                             title: 'Informação',
                             buttons: Ext.MessageBox.OK,
-                            message: 'Captured audio path: '+ files[i].fullPath
-                        });*/
+                            message: 'done'
+                        });
                     }
                 },
                 failure: function () {
@@ -73802,6 +73813,12 @@ Ext.define('MyApp.controller.EscalaVerbal', {
     onSubmitCommand: function (view, result, userID,mimeType) {
 
         var me = this;
+
+        Ext.device.Notification.show({
+            title: 'One Button',
+            buttons: Ext.MessageBox.OK,
+            message: 'onSubmitCommandDevice'
+        });
 
         Ext.Ajax.request({
             url: 'http://www.antonio-ramos.com/sencha/php/createBlob.php',
