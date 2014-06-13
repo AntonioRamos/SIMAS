@@ -73793,7 +73793,8 @@ Ext.define('MyApp.controller.EscalaVerbal', {
         },
         control: {
             verbalScale: {
-                onSubmitCommand: 'onSubmitCommand'
+                onSubmitCommand: 'onSubmitCommand',
+                onSubmitCommandDevice: 'onSubmitCommandDevice'
             }
         }
     },
@@ -73840,8 +73841,6 @@ Ext.define('MyApp.controller.EscalaVerbal', {
 
         var me = this;
 
-        alert("sim");
-
         Ext.Ajax.request({
             url: 'http://www.antonio-ramos.com/sencha/php/createBlob.php',
             method: 'post',
@@ -73856,8 +73855,6 @@ Ext.define('MyApp.controller.EscalaVerbal', {
             success: function (response) {
 
                 var loginResponse = Ext.JSON.decode(response.responseText);
-
-                alert("sim2");
 
                 if (loginResponse) {
                     Ext.device.Notification.show({
