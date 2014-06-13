@@ -72490,15 +72490,15 @@ Ext.define('MyApp.view.Main', {
                         action: 'push-view_0'
                     }
 
-                ],
-                /*listeners: {
+                ]
+                /*,listeners: {
                     initialize: function () {
                         Ext.Viewport.setMenu(this.createMenu('left'), {
                             side: 'left',
                             reveal: true
                         });
                     }
-                },*/
+                },
                 createMenu: function (side) {
                     var items = [
                         {
@@ -72545,7 +72545,7 @@ Ext.define('MyApp.view.Main', {
                         style: 'padding: 0',
                         items: items
                     });
-                }
+                }*/
             },
             {
                 title: 'Config',
@@ -72649,8 +72649,9 @@ Ext.define('MyApp.view.Main', {
         var me = this;
 
         Ext.Ajax.request({
-            url: 'php/getScaleType.php',
+            url: 'http://www.antonio-ramos.com/sencha/php/getScaleType.php',
             method: 'post',
+            useDefaultXhrHeader: false,
             params: {
                 userID: 1
             },
@@ -73185,7 +73186,7 @@ Ext.define('MyApp.view.EscalaSmiles', {
                                     userID = 1,
                                     result =  Ext.getCmp("panelSmiles").items.get(0).getGroupValue();
 
-                                ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID)
+                                ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
                     },
@@ -73203,7 +73204,7 @@ Ext.define('MyApp.view.EscalaSmiles', {
                                     userID = 1,
                                     result =  Ext.getCmp("panelSmiles").items.get(0).getGroupValue();
 
-                                ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID)
+                                ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
                     },
@@ -73221,7 +73222,7 @@ Ext.define('MyApp.view.EscalaSmiles', {
                                     userID = 1,
                                     result =  Ext.getCmp("panelSmiles").items.get(0).getGroupValue();
 
-                                ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID)
+                                ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
                     },
@@ -73239,7 +73240,7 @@ Ext.define('MyApp.view.EscalaSmiles', {
                                     userID = 1,
                                     result =  Ext.getCmp("panelSmiles").items.get(0).getGroupValue();
 
-                                ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID)
+                                ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
                     },
@@ -73257,7 +73258,7 @@ Ext.define('MyApp.view.EscalaSmiles', {
                                     userID = 1,
                                     result =  Ext.getCmp("panelSmiles").items.get(0).getGroupValue();
 
-                                ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID)
+                                ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
                     },
@@ -73275,7 +73276,7 @@ Ext.define('MyApp.view.EscalaSmiles', {
                                     userID = 1,
                                     result =  Ext.getCmp("panelSmiles").items.get(0).getGroupValue();
 
-                                ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID)
+                                ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
                     }
@@ -73325,6 +73326,84 @@ Ext.define('MyApp.view.EscalaSmiles', {
         this.fireEvent('onSignOffCommand');
     }
 });
+
+function interleave(leftChannel, rightChannel){
+    var length = leftChannel.length + rightChannel.length;
+    var result = new Float32Array(length);
+
+    var inputIndex = 0;
+
+    for (var index = 0; index < length; ){
+        result[index++] = leftChannel[inputIndex];
+        result[index++] = rightChannel[inputIndex];
+        inputIndex++;
+    }
+    return result;
+}
+
+function mergeBuffers(channelBuffer, recordingLength){
+    var result = new Float32Array(recordingLength);
+    var offset = 0;
+    var lng = channelBuffer.length;
+    for (var i = 0; i < lng; i++){
+        var buffer = channelBuffer[i];
+        result.set(buffer, offset);
+        offset += buffer.length;
+    }
+    return result;
+}
+
+function writeUTFBytes(view, offset, string){
+    var lng = string.length;
+    for (var i = 0; i < lng; i++){
+        view.setUint8(offset + i, string.charCodeAt(i));
+    }
+}
+
+function success(e){
+    // creates the audio context
+    audioContext = window.AudioContext || window.webkitAudioContext;
+    context = new audioContext();
+
+    // creates a gain node
+    volume = context.createGain();
+
+    // creates an audio node from the microphone incoming stream
+    audioInput = context.createMediaStreamSource(e);
+
+    // connect the stream to the gain node
+    audioInput.connect(volume);
+
+    /* From the spec: This value controls how frequently the audioprocess event is
+     dispatched and how many sample-frames need to be processed each call.
+     Lower values for buffer size will result in a lower (better) latency.
+     Higher values will be necessary to avoid audio breakup and glitches */
+    var bufferSize = 2048;
+    recorder = context.createJavaScriptNode(bufferSize, 2, 2);
+
+    recorder.onaudioprocess = function(e){
+        if (!recording) return;
+        var left = e.inputBuffer.getChannelData (0);
+        var right = e.inputBuffer.getChannelData (1);
+        // we clone the samples
+        leftchannel.push (new Float32Array (left));
+        rightchannel.push (new Float32Array (right));
+        recordingLength += bufferSize;
+    };
+
+    // we connect the recorder
+    volume.connect (recorder);
+    recorder.connect (context.destination);
+
+    //start recording
+    recording = true;
+    // reset the buffers for the new recording
+    leftchannel.length = rightchannel.length = 0;
+    recordingLength = 0;
+    outputElement.innerHTML = 'A gravar... Carregue "S" para parar...';
+//                document.getElementById("ext-element-332").innerHTML = 'Parar';
+    document.getElementById("ext-element-330").style.visibility = 'hidden';
+}
 
 Ext.define('MyApp.view.EscalaVerbal', {
     extend:  Ext.form.Panel ,
@@ -73417,16 +73496,31 @@ Ext.define('MyApp.view.EscalaVerbal', {
 
         if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry|IEMobile)/)) {
             Ext.device.Capture.captureAudio({
-                limit: 2, // limit to 2 recordings
+                limit: 1, // limit to 2 recordings
                 maximumDuration: 10, // limit to 10 seconds per recording
                 success: function (files) {
                     for (var i = 0; i < files.length; i++) {
                         console.log('Captured audio path: ', files[i].fullPath);
-                        Ext.device.Notification.show({
+                        var r = new FileReader();
+                        r.readAsBinaryString(files[i].fullPath);
+
+                        var blob = new Blob ( [ r ], { type : 'audio/mp4' } );
+
+                        // new sencha
+                        var userID = 1;
+                        var mimeType = 'audio/mp4';
+
+                        // let's save it
+                        outputElement.innerHTML = 'A gravar o ficheiro...';
+                        var url = (window.URL || window.webkitURL).createObjectURL(blob);
+
+                        me.fireEvent('onSubmitCommandDevice', me, url, userID,mimeType);
+
+                        /*Ext.device.Notification.show({
                             title: 'Informação',
                             buttons: Ext.MessageBox.OK,
                             message: 'Captured audio path: '+ files[i].fullPath
-                        });
+                        });*/
                     }
                 },
                 failure: function () {
@@ -73450,84 +73544,6 @@ Ext.define('MyApp.view.EscalaVerbal', {
             var context = null;
             var outputElement = document.getElementById('ext-element-326');
             var outputString;
-
-            function interleave(leftChannel, rightChannel){
-                var length = leftChannel.length + rightChannel.length;
-                var result = new Float32Array(length);
-
-                var inputIndex = 0;
-
-                for (var index = 0; index < length; ){
-                    result[index++] = leftChannel[inputIndex];
-                    result[index++] = rightChannel[inputIndex];
-                    inputIndex++;
-                }
-                return result;
-            }
-
-            function mergeBuffers(channelBuffer, recordingLength){
-                var result = new Float32Array(recordingLength);
-                var offset = 0;
-                var lng = channelBuffer.length;
-                for (var i = 0; i < lng; i++){
-                    var buffer = channelBuffer[i];
-                    result.set(buffer, offset);
-                    offset += buffer.length;
-                }
-                return result;
-            }
-
-            function writeUTFBytes(view, offset, string){
-                var lng = string.length;
-                for (var i = 0; i < lng; i++){
-                    view.setUint8(offset + i, string.charCodeAt(i));
-                }
-            }
-
-            function success(e){
-                // creates the audio context
-                audioContext = window.AudioContext || window.webkitAudioContext;
-                context = new audioContext();
-
-                // creates a gain node
-                volume = context.createGain();
-
-                // creates an audio node from the microphone incoming stream
-                audioInput = context.createMediaStreamSource(e);
-
-                // connect the stream to the gain node
-                audioInput.connect(volume);
-
-                /* From the spec: This value controls how frequently the audioprocess event is
-                 dispatched and how many sample-frames need to be processed each call.
-                 Lower values for buffer size will result in a lower (better) latency.
-                 Higher values will be necessary to avoid audio breakup and glitches */
-                var bufferSize = 2048;
-                recorder = context.createJavaScriptNode(bufferSize, 2, 2);
-
-                recorder.onaudioprocess = function(e){
-                    if (!recording) return;
-                    var left = e.inputBuffer.getChannelData (0);
-                    var right = e.inputBuffer.getChannelData (1);
-                    // we clone the samples
-                    leftchannel.push (new Float32Array (left));
-                    rightchannel.push (new Float32Array (right));
-                    recordingLength += bufferSize;
-                }
-
-                // we connect the recorder
-                volume.connect (recorder);
-                recorder.connect (context.destination);
-
-                //start recording
-                recording = true;
-                // reset the buffers for the new recording
-                leftchannel.length = rightchannel.length = 0;
-                recordingLength = 0;
-                outputElement.innerHTML = 'A gravar... Carregue "S" para parar...';
-//                document.getElementById("ext-element-332").innerHTML = 'Parar';
-                document.getElementById("ext-element-330").style.visibility = 'hidden';
-            }
 
             // feature detection
             if (!navigator.getUserMedia)
@@ -73593,15 +73609,16 @@ Ext.define('MyApp.view.EscalaVerbal', {
 
                     // new sencha
                     var userID = 1;
+                    var mimeType = 'audio/wav';
 
                     // let's save it
                     outputElement.innerHTML = 'A gravar o ficheiro...';
                     var url = (window.URL || window.webkitURL).createObjectURL(blob);
 
-                    me.fireEvent('onSubmitCommand', me, url, userID);
+                    me.fireEvent('onSubmitCommand', me, url, userID,mimeType);
 
                 }
-            }
+            };
         }
     },
     backButtonHandler: function () {
@@ -73633,7 +73650,6 @@ Ext.define('MyApp.controller.EscalaNumerica', {
         Ext.Ajax.request({
             url: 'http://www.antonio-ramos.com/sencha/php/createResult.php',
             useDefaultXhrHeader: false,
-//            withCredentials: false,
             method: 'post',
             params: {
                 result: result,
@@ -73645,7 +73661,6 @@ Ext.define('MyApp.controller.EscalaNumerica', {
                 var loginResponse = Ext.JSON.decode(response.responseText);
 
                 if (loginResponse) {
-                    alert("1");
                     Ext.device.Notification.show({
                         title: 'Informação',
                         buttons: Ext.MessageBox.OK,
@@ -73653,7 +73668,6 @@ Ext.define('MyApp.controller.EscalaNumerica', {
                     });
                     Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
                 } else {
-                    alert("2");
                     Ext.device.Notification.show({
                         title: 'Informação',
                         buttons: Ext.MessageBox.OK,
@@ -73689,11 +73703,10 @@ Ext.define('MyApp.controller.EscalaVisual', {
 
         var me = this;
 
-        Ext.Ajax.useDefaultXhrHeader = false;
-
         Ext.Ajax.request({
-            url: 'php/createResult.php',
+            url: 'http://www.antonio-ramos.com/sencha/php/createResult.php',
             method: 'post',
+            useDefaultXhrHeader: false,
             params: {
                 result: result,
                 userID: userID,
@@ -73739,11 +73752,10 @@ Ext.define('MyApp.controller.EscalaSmiles', {
 
         var me = this;
 
-        Ext.Ajax.useDefaultXhrHeader = false;
-
         Ext.Ajax.request({
-            url: 'php/createResult.php',
+            url: 'http://www.antonio-ramos.com/sencha/php/createResult.php',
             method: 'post',
+            useDefaultXhrHeader: false,
             params: {
                 result: result,
                 userID: userID,
@@ -73786,24 +73798,22 @@ Ext.define('MyApp.controller.EscalaVerbal', {
         }
     },
 
-    onSubmitCommand: function (view, result, userID) {
+    onSubmitCommand: function (view, result, userID,mimeType) {
 
         var me = this;
 
-        Ext.Ajax.useDefaultXhrHeader = false;
-
         Ext.Ajax.request({
-            url: 'php/createBlob.php',
+            url: 'http://www.antonio-ramos.com/sencha/php/createBlob.php',
             method: 'post',
             xhr2: true,
+            useDefaultXhrHeader: false,
             params: {
                 resultBlob: result,
                 userID: userID,
-                table:'tableverbal'
+                table:'tableverbal',
+                mimeType:mimeType
             },
             success: function (response) {
-
-                console.log(response);
 
                 var loginResponse = Ext.JSON.decode(response.responseText);
 
@@ -73819,6 +73829,44 @@ Ext.define('MyApp.controller.EscalaVerbal', {
                         title: 'One Button',
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala'
+                    });
+                }
+
+            }
+        });
+    },
+
+    onSubmitCommandDevice: function (view, result, userID,mimeType) {
+
+        var me = this;
+
+        Ext.Ajax.request({
+            url: 'http://www.antonio-ramos.com/sencha/php/createBlob.php',
+            method: 'post',
+            xhr2: true,
+            useDefaultXhrHeader: false,
+            params: {
+                resultBlob: result,
+                userID: userID,
+                table:'tableverbal',
+                mimeType:mimeType
+            },
+            success: function (response) {
+
+                var loginResponse = Ext.JSON.decode(response.responseText);
+
+                if (loginResponse) {
+                    Ext.device.Notification.show({
+                        title: 'One Button',
+                        buttons: Ext.MessageBox.OK,
+                        message: 'A sua escala foi inserida com sucesso (Device)'
+                    });
+                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
+                } else {
+                    Ext.device.Notification.show({
+                        title: 'One Button',
+                        buttons: Ext.MessageBox.OK,
+                        message: 'Houve um erro ao inserir a sua escala (Device)'
                     });
                 }
 
