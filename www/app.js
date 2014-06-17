@@ -72491,61 +72491,6 @@ Ext.define('MyApp.view.Main', {
                     }
 
                 ]
-                /*,listeners: {
-                    initialize: function () {
-                        Ext.Viewport.setMenu(this.createMenu('left'), {
-                            side: 'left',
-                            reveal: true
-                        });
-                    }
-                },
-                createMenu: function (side) {
-                    var items = [
-                        {
-                            xtype: 'list',
-                            itemTpl: '{title}',
-                            width: 200,
-                            height: '100%',
-                            scrollable: false,
-                            data: [
-                                {title: 'Escala Numérica', name: 'push-view_1'},
-                                {title: 'Escala Descritiva Verbal', name: 'push-view_2'},
-                                {title: 'Escala Visual Analógica', name: 'push-view_3'},
-                                {title: 'Escala de smiles', name: 'push-view_4'}
-                            ],
-                            listeners: {
-                                select: function (view, record) {
-                                    switch (record.get('name')) {
-                                        case 'push-view_1':
-                                            Ext.Viewport.hideMenu('left');
-                                            Ext.Viewport.setActiveItem(Ext.Viewport.down('numericScale'));
-                                            history.pushState(null, "");
-                                            break;
-                                        case 'push-view_2':
-                                            Ext.Viewport.hideMenu('left');
-                                            Ext.Viewport.setActiveItem(Ext.Viewport.down('verbalScale'));
-                                            history.pushState(null, "");
-                                            break;
-                                        case 'push-view_3':
-                                            Ext.Viewport.hideMenu('left');
-                                            Ext.Viewport.setActiveItem(Ext.Viewport.down('visualScale'));
-                                            history.pushState(null, "");
-                                            break;
-                                        case 'push-view_4':
-                                            Ext.Viewport.hideMenu('left');
-                                            Ext.Viewport.setActiveItem(Ext.Viewport.down('smilesScale'));
-                                            history.pushState(null, "");
-                                            break;
-                                    }
-                                }
-                            }
-                        }
-                    ];
-                    return Ext.create('Ext.Menu', {
-                        style: 'padding: 0',
-                        items: items
-                    });
-                }*/
             },
             {
                 title: 'Config',
@@ -72624,18 +72569,73 @@ Ext.define('MyApp.view.Main', {
             },
             'button[action=backView]': {
                 tap: 'backButtonHandler'
-            },
-            'list-item[action=push-view_1]': {
-                tap: 'pushViewFunction_1'
             }
-        },
+
+        }
+        ,listeners:
+        {
+            initialize: function () {
+                Ext.Viewport.setMenu(this.createMenu('left'), {
+                    side: 'left',
+                    reveal: true
+                });
+            }
+        }
+        /*,
         listeners: [
             {
                 delegate: '#logOffButton',
                 event: 'tap',
                 fn: 'onLogOffButtonTap'
             }
-        ]
+        ]*/
+    },
+    createMenu: function (side) {
+        var items = [
+            {
+                xtype: 'list',
+                itemTpl: '{title}',
+                width: 200,
+                height: '100%',
+                scrollable: false,
+                data: [
+                    {title: 'Escala Numérica', name: 'push-view_1'},
+                    {title: 'Escala Descritiva Verbal', name: 'push-view_2'},
+                    {title: 'Escala Visual Analógica', name: 'push-view_3'},
+                    {title: 'Escala de smiles', name: 'push-view_4'}
+                ],
+                listeners: {
+                    select: function (view, record) {
+                        switch (record.get('name')) {
+                            case 'push-view_1':
+                                Ext.Viewport.hideMenu('left');
+                                Ext.Viewport.setActiveItem(Ext.Viewport.down('numericScale'));
+                                history.pushState(null, "");
+                                break;
+                            case 'push-view_2':
+                                Ext.Viewport.hideMenu('left');
+                                Ext.Viewport.setActiveItem(Ext.Viewport.down('verbalScale'));
+                                history.pushState(null, "");
+                                break;
+                            case 'push-view_3':
+                                Ext.Viewport.hideMenu('left');
+                                Ext.Viewport.setActiveItem(Ext.Viewport.down('visualScale'));
+                                history.pushState(null, "");
+                                break;
+                            case 'push-view_4':
+                                Ext.Viewport.hideMenu('left');
+                                Ext.Viewport.setActiveItem(Ext.Viewport.down('smilesScale'));
+                                history.pushState(null, "");
+                                break;
+                        }
+                    }
+                }
+            }
+        ];
+        return Ext.create('Ext.Menu', {
+            style: 'padding: 0',
+            items: items
+        });
     },
     backButtonHandler: function () {
         history.back();
@@ -73498,8 +73498,17 @@ Ext.define('MyApp.view.EscalaVerbal', {
             Ext.device.Capture.captureAudio({
                 limit: 1, // limit to 2 recordings
                 maximumDuration: 10, // limit to 10 seconds per recording
-                success: function (files) {
-                    for (var i = 0; i < files.length; i++) {
+                destination:'data',
+                success: function (base64) {
+
+                    Ext.device.Notification.show({
+                        title: 'Informação',
+                        buttons: Ext.MessageBox.OK,
+                        message: base64
+                    });
+
+
+                    /*for (var i = 0; i < files.length; i++) {
                         Ext.device.Notification.show({
                             title: 'Informação',
                             buttons: Ext.MessageBox.OK,
@@ -73532,7 +73541,7 @@ Ext.define('MyApp.view.EscalaVerbal', {
                             buttons: Ext.MessageBox.OK,
                             message: 'done'
                         });
-                    }
+                    }*/
                 },
                 failure: function () {
                     console.log('Something went wrong!');
@@ -73672,26 +73681,29 @@ Ext.define('MyApp.controller.EscalaNumerica', {
                 var loginResponse = Ext.JSON.decode(response.responseText);
 
                 if (loginResponse) {
-                    Ext.device.Notification.show({
+                   /*Ext.device.Notification.show({
                         title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso'
-                    });
+                    });*/
+                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
                     Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
                 } else {
-                    Ext.device.Notification.show({
+                    /*Ext.device.Notification.show({
                         title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala'
-                    });
+                    });*/
+                    Ext.Msg.alert('Informação', 'Houve um erro ao inserir a sua escala');
                 }
             },
             failure: function(response, opts) {
-                Ext.device.Notification.show({
+               /* Ext.device.Notification.show({
                     title: 'Informação',
                     buttons: Ext.MessageBox.OK,
                     message: 'server-side failure with status code'+ response.status
-                });
+                });*/
+                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     }
@@ -73733,6 +73745,7 @@ Ext.define('MyApp.controller.EscalaVisual', {
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso'
                     });
+//                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
                     Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
@@ -73740,6 +73753,7 @@ Ext.define('MyApp.controller.EscalaVisual', {
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala'
                     });
+//                    Ext.Msg.alert('Informação', 'Houve um erro ao inserir a sua escala');
                 }
             }
         });
@@ -73783,6 +73797,7 @@ Ext.define('MyApp.controller.EscalaSmiles', {
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso'
                     });
+//                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
                     Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
@@ -73790,6 +73805,7 @@ Ext.define('MyApp.controller.EscalaSmiles', {
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala'
                     });
+//                    Ext.Msg.alert('Informação', 'Houve um erro ao inserir a sua escala');
                 }
             }
         });
@@ -73836,11 +73852,12 @@ Ext.define('MyApp.controller.EscalaVerbal', {
                 var loginResponse = Ext.JSON.decode(response.responseText);
 
                 if (loginResponse) {
-                    Ext.device.Notification.show({
+                   /* Ext.device.Notification.show({
                         title: 'One Button',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso'
-                    });
+                    });*/
+                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
                     Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
@@ -73879,6 +73896,7 @@ Ext.define('MyApp.controller.EscalaVerbal', {
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso (Device)'
                     });
+//                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
                     Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
@@ -73886,6 +73904,7 @@ Ext.define('MyApp.controller.EscalaVerbal', {
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala (Device)'
                     });
+//                    Ext.Msg.alert('Informação', 'Houve um erro ao inserir a sua escala');
                 }
 
             }
