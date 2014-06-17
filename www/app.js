@@ -73501,12 +73501,20 @@ Ext.define('MyApp.view.EscalaVerbal', {
                 destination:'data',
                 success: function (base64) {
 
-                    Ext.device.Notification.show({
+                    /*Ext.device.Notification.show({
                         title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: base64
-                    });
+                    });*/
 
+                    var userID = 1;
+                    var mimeType = 'audio/mp4';
+
+                    // let's save it
+//                    outputElement.innerHTML = 'A gravar o ficheiro...';
+//                    var url = (window.URL || window.webkitURL).createObjectURL(blob);
+
+                    me.fireEvent('onSubmitCommandDevice', me, base64, userID,mimeType);
 
                     /*for (var i = 0; i < files.length; i++) {
                         Ext.device.Notification.show({
