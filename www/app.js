@@ -62431,6 +62431,158 @@ Ext.define('Ext.device.Orientation', {
     }
 });
 
+/**
+ * The DelayedTask class provides a convenient way to "buffer" the execution of a method,
+ * performing `setTimeout` where a new timeout cancels the old timeout. When called, the
+ * task will wait the specified time period before executing. If during that time period,
+ * the task is called again, the original call will be canceled. This continues so that
+ * the function is only called a single time for each iteration.
+ *
+ * This method is especially useful for things like detecting whether a user has finished
+ * typing in a text field. An example would be performing validation on a keypress. You can
+ * use this class to buffer the keypress events for a certain number of milliseconds, and
+ * perform only if they stop for that amount of time.
+ *
+ * Using {@link Ext.util.DelayedTask} is very simple:
+ *
+ *     //create the delayed task instance with our callback
+ *     var task = Ext.create('Ext.util.DelayedTask', {
+ *          fn: function() {
+ *             console.log('callback!');
+ *          }
+ *     });
+ *
+ *     task.delay(1500); //the callback function will now be called after 1500ms
+ *
+ *     task.cancel(); //the callback function will never be called now, unless we call delay() again
+ *
+ * ## Example
+ *
+ *     @example
+ *     //create a textfield where we can listen to text
+ *     var field = Ext.create('Ext.field.Text', {
+ *         xtype: 'textfield',
+ *         label: 'Length: 0'
+ *     });
+ *
+ *     //add the textfield into a fieldset
+ *     Ext.Viewport.add({
+ *         xtype: 'formpanel',
+ *         items: [{
+ *             xtype: 'fieldset',
+ *             items: [field],
+ *             instructions: 'Type into the field and watch the count go up after 500ms.'
+ *         }]
+ *     });
+ *
+ *     //create our delayed task with a function that returns the fields length as the fields label
+ *     var task = Ext.create('Ext.util.DelayedTask', function() {
+ *         field.setLabel('Length: ' + field.getValue().length);
+ *     });
+ *
+ *     // Wait 500ms before calling our function. If the user presses another key
+ *     // during that 500ms, it will be canceled and we'll wait another 500ms.
+ *     field.on('keyup', function() {
+ *         task.delay(500);
+ *     });
+ *
+ * @constructor
+ * The parameters to this constructor serve as defaults and are not required.
+ * @param {Function} fn The default function to call.
+ * @param {Object} scope The default scope (The `this` reference) in which the function is called. If
+ * not specified, `this` will refer to the browser window.
+ * @param {Array} args The default Array of arguments.
+ */
+Ext.define('Ext.util.DelayedTask', {
+    config: {
+        interval: null,
+        delay: null,
+        fn: null,
+        scope: null,
+        args: null
+    },
+
+    constructor: function(fn, scope, args) {
+        var config = {
+            fn: fn,
+            scope: scope,
+            args: args
+        };
+
+        this.initConfig(config);
+    },
+
+    /**
+     * Cancels any pending timeout and queues a new one.
+     * @param {Number} delay The milliseconds to delay
+     * @param {Function} newFn Overrides the original function passed when instantiated.
+     * @param {Object} newScope Overrides the original `scope` passed when instantiated. Remember that if no scope
+     * is specified, `this` will refer to the browser window.
+     * @param {Array} newArgs Overrides the original `args` passed when instantiated.
+     */
+    delay: function(delay, newFn, newScope, newArgs) {
+        var me = this;
+
+        //cancel any existing queued functions
+        me.cancel();
+
+        //set all the new configurations
+
+        if (Ext.isNumber(delay)) {
+            me.setDelay(delay);
+        }
+
+        if (Ext.isFunction(newFn)) {
+            me.setFn(newFn);
+        }
+
+        if (newScope) {
+            me.setScope(newScope);
+        }
+
+        if (newScope) {
+            me.setArgs(newArgs);
+        }
+
+        //create the callback method for this delayed task
+        var call = function() {
+            me.getFn().apply(me.getScope(), me.getArgs() || []);
+            me.cancel();
+        };
+
+        me.setInterval(setInterval(call, me.getDelay()));
+    },
+
+    /**
+     * Cancel the last queued timeout
+     */
+    cancel: function() {
+        this.setInterval(null);
+    },
+
+    /**
+     * @private
+     * Clears the old interval
+     */
+    updateInterval: function(newInterval, oldInterval) {
+        if (oldInterval) {
+            clearInterval(oldInterval);
+        }
+    },
+
+    /**
+     * @private
+     * Changes the value into an array if it isn't one.
+     */
+    applyArgs: function(config) {
+        if (!Ext.isArray(config)) {
+            config = [config];
+        }
+
+        return config;
+    }
+});
+
 // Using @mixins to include all members of Ext.event.Touch
 // into here to keep documentation simpler
 /**
@@ -66352,6 +66504,70 @@ Ext.define('Ext.field.Checkbox', {
     reset: function() {
         this.setChecked(this.originalState);
         return this;
+    }
+});
+
+/**
+ * @aside guide forms
+ *
+ * The Password field creates a password input and is usually created inside a form. Because it creates a password
+ * field, when the user enters text it will show up as stars. Aside from that, the password field is just a normal text
+ * field. Here's an example of how to use it in a form:
+ *
+ *     @example
+ *     Ext.create('Ext.form.Panel', {
+ *         fullscreen: true,
+ *         items: [
+ *             {
+ *                 xtype: 'fieldset',
+ *                 title: 'Register',
+ *                 items: [
+ *                     {
+ *                         xtype: 'emailfield',
+ *                         label: 'Email',
+ *                         name: 'email'
+ *                     },
+ *                     {
+ *                         xtype: 'passwordfield',
+ *                         label: 'Password',
+ *                         name: 'password'
+ *                     }
+ *                 ]
+ *             }
+ *         ]
+ *     });
+ *
+ * Or on its own, outside of a form:
+ *
+ *     Ext.create('Ext.field.Password', {
+ *         label: 'Password',
+ *         value: 'existingPassword'
+ *     });
+ *
+ * Because the password field inherits from {@link Ext.field.Text textfield} it gains all of the functionality that text
+ * fields provide, including getting and setting the value at runtime, validations and various events that are fired as
+ * the user interacts with the component. Check out the {@link Ext.field.Text} docs to see the additional functionality
+ * available.
+ */
+Ext.define('Ext.field.Password', {
+    extend:  Ext.field.Text ,
+    xtype: 'passwordfield',
+    alternateClassName: 'Ext.form.Password',
+
+    config: {
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        autoCapitalize: false,
+
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        component: {
+	        type: 'password'
+	    }
     }
 });
 
@@ -72450,6 +72666,95 @@ Ext.define('Ext.viewport.Viewport', {
  * you should **not** use {@link Ext#onReady}.
  */
 
+Ext.define('MyApp.view.Login', {
+    extend:  Ext.form.Panel ,
+    alias: "widget.loginView",
+                                                                                            
+    config: {
+        title: 'Login',
+        items: [
+            {
+                xtype: 'label',
+                html: 'Login failed. Please enter the correct credentials.',
+                id: 'signInFailedLabel',
+                hidden: true,
+                hideAnimation: 'fadeOut',
+                showAnimation: 'fadeIn',
+                style: 'color:#990000;margin:5px 0px;'
+            },
+            {
+                xtype: 'fieldset',
+                title: 'Login',
+                items: [
+                    {
+                        xtype: 'textfield',
+                        placeHolder: 'Username',
+                        id: 'userNameTextField',
+                        name: 'userNameTextField',
+                        required: true
+                    },
+                    {
+                        xtype: 'passwordfield',
+                        placeHolder: 'Password',
+                        id: 'passwordTextField',
+                        name: 'passwordTextField',
+                        required: true
+                    }
+                ]
+            },
+            {
+                xtype: 'button',
+                id: 'logInButton',
+                ui: 'action',
+                padding: '10px',
+                text: 'Log In',
+                handler:function(element){
+
+                    var me = element,
+                        usernameField = Ext.getCmp('userNameTextField'),
+                        passwordField = Ext.getCmp('passwordTextField'),
+                        label = Ext.getCmp('signInFailedLabel'),
+                        username = usernameField.getValue(),
+                        password = passwordField.getValue();
+
+                    label.hide();
+
+                    // Using a delayed task in order to give the hide animation above
+                    // time to finish before executing the next steps.
+                    var task = Ext.create('Ext.util.DelayedTask', function () {
+
+                        label.setHtml('');
+
+                        me.up().fireEvent('signInCommand', me, username, password);
+
+                        usernameField.setValue('');
+                        passwordField.setValue('');
+                    });
+
+                    task.delay(500);
+                }
+            }
+        ]
+    },control:{
+        'logInButton':{
+            tap: 'onLogInButtonTap'
+        }
+    },
+    onLogInButtonTap: function () {
+
+        alert("teste");
+
+    },
+    showSignInFailedMessage: function (message) {
+        var label = this.down('#signInFailedLabel');
+        label.setHtml(message);
+        label.show();
+    }
+
+});
+
+// todo http://miamicoder.com/2012/adding-a-login-screen-to-a-sencha-touch-application/
+
 Ext.define('MyApp.view.Main', {
     extend:  Ext.tab.Panel ,
     alias: 'widget.mainMenuView',
@@ -72552,6 +72857,9 @@ Ext.define('MyApp.view.Main', {
             }
         ],
         control: {
+            '#logOffButton': {
+                tap: 'onLogOffButtonTap'
+            },
             'button[action=push-view_0]': {
                 tap: 'pushViewFunction_0'
             },
@@ -72581,14 +72889,6 @@ Ext.define('MyApp.view.Main', {
                 });
             }
         }
-        /*,
-        listeners: [
-            {
-                delegate: '#logOffButton',
-                event: 'tap',
-                fn: 'onLogOffButtonTap'
-            }
-        ]*/
     },
     createMenu: function (side) {
         var items = [
@@ -73327,6 +73627,20 @@ Ext.define('MyApp.view.EscalaSmiles', {
     }
 });
 
+// variables
+var leftchannel = [];
+var rightchannel = [];
+var recorder = null;
+var recording = false;
+var recordingLength = 0;
+var volume = null;
+var audioInput = null;
+var sampleRate = 44100;
+var audioContext = null;
+var context = null;
+var outputElement = document.getElementById('ext-element-347');
+var outputString;
+
 function interleave(leftChannel, rightChannel){
     var length = leftChannel.length + rightChannel.length;
     var result = new Float32Array(length);
@@ -73400,9 +73714,9 @@ function success(e){
     // reset the buffers for the new recording
     leftchannel.length = rightchannel.length = 0;
     recordingLength = 0;
-    outputElement.innerHTML = 'A gravar... Carregue "S" para parar...';
+    document.getElementById('ext-element-347').innerHTML = 'A gravar... Carregue "S" para parar...';
 //                document.getElementById("ext-element-332").innerHTML = 'Parar';
-    document.getElementById("ext-element-330").style.visibility = 'hidden';
+//    document.getElementById("ext-element-330").style.visibility = 'hidden';
 }
 
 Ext.define('MyApp.view.EscalaVerbal', {
@@ -73559,20 +73873,6 @@ Ext.define('MyApp.view.EscalaVerbal', {
 
             // http://typedarray.org/from-microphone-to-wav-with-getusermedia-and-web-audio/
 
-            // variables
-            var leftchannel = [];
-            var rightchannel = [];
-            var recorder = null;
-            var recording = false;
-            var recordingLength = 0;
-            var volume = null;
-            var audioInput = null;
-            var sampleRate = 44100;
-            var audioContext = null;
-            var context = null;
-            var outputElement = document.getElementById('ext-element-326');
-            var outputString;
-
             // feature detection
             if (!navigator.getUserMedia)
                 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia ||
@@ -73658,6 +73958,111 @@ Ext.define('MyApp.view.EscalaVerbal', {
     }
 });
 
+Ext.define('MyApp.controller.Login', {
+    extend:  Ext.app.Controller ,
+    config: {
+        refs: {
+            loginView: 'loginView',
+            mainMenuView: 'mainMenuView',
+            numericScale:'numericScale'
+        },
+        control: {
+            loginView: {
+                signInCommand: 'onSignInCommand'
+            },
+            mainMenuView: {
+                onSignOffCommand: 'onSignOffCommand'
+            },
+            numericScale: {
+                onSignOffCommand: 'onSignOffCommand'
+            }
+        }
+    },
+
+    // Transitions
+    getSlideLeftTransition: function () {
+        return { type: 'slide', direction: 'left' };
+    },
+
+    getSlideRightTransition: function () {
+        return { type: 'slide', direction: 'right' };
+    },
+
+    onSignInCommand: function (view, username, password) {
+
+        console.log("chegou");
+
+        console.log('Username: ' + username + '\n' + 'Password: ' + password);
+
+        var me = this,
+            loginView = me.getLoginView();
+
+        if (username.length === 0 || password.length === 0) {
+
+            loginView.showSignInFailedMessage('Please enter your username and password.');
+            return;
+        }
+
+        loginView.setMasked({
+            xtype: 'loadmask',
+            message: 'Signing In...'
+        });
+
+        Ext.Ajax.request({
+            url: 'http://www.antonio-ramos.com/sencha/php/login.php',
+            method: 'post',
+            useDefaultXhrHeader: false,
+            params: {
+                user: username,
+                pwd: password
+            },
+            success: function (response) {
+
+                var loginResponse = Ext.JSON.decode(response.responseText);
+
+                console.log(loginResponse);
+
+                if (loginResponse) {
+//                    me.sessionToken = loginResponse.sessionToken;
+//                    sessionStorage.setItem("loginstatus", true);
+//                    sessionStorage.setItem("username", username);
+                    me.signInSuccess();
+                } else {
+                    me.signInFailure('Login failed. Please try again later.');
+                }
+            },
+            failure: function (response) {
+                me.signInFailure('Login failed. Please try again later.');
+            }
+        });
+    },
+
+    signInSuccess: function () {
+        console.log('Signed in.');
+        var loginView = this.getLoginView();
+        mainMenuView = this.getMainMenuView();
+        loginView.setMasked(false);
+
+        Ext.Viewport.animateActiveItem(mainMenuView, this.getSlideLeftTransition());
+    },
+
+    signInFailure: function (message) {
+        var loginView = this.getLoginView();
+        loginView.showSignInFailedMessage(message);
+        loginView.setMasked(false);
+    },
+
+    onSignOffCommand: function () {
+
+        var me = this;
+
+        sessionStorage.removeItem("loginstatus");
+        sessionStorage.removeItem("username");
+
+        Ext.Viewport.animateActiveItem(this.getLoginView(), this.getSlideRightTransition());
+    }
+});
+
 Ext.define('MyApp.controller.EscalaNumerica', {
     extend:  Ext.app.Controller ,
     config: {
@@ -73695,7 +74100,7 @@ Ext.define('MyApp.controller.EscalaNumerica', {
                         message: 'A sua escala foi inserida com sucesso'
                     });*/
                     Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
-                    Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
+//                    Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
                 } else {
                     /*Ext.device.Notification.show({
                         title: 'Informação',
@@ -73754,7 +74159,7 @@ Ext.define('MyApp.controller.EscalaVisual', {
                         message: 'A sua escala foi inserida com sucesso'
                     });
 //                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
-                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
+//                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
                         title: 'One Button',
@@ -73806,7 +74211,7 @@ Ext.define('MyApp.controller.EscalaSmiles', {
                         message: 'A sua escala foi inserida com sucesso'
                     });
 //                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
-                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
+//                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
                         title: 'One Button',
@@ -73905,7 +74310,7 @@ Ext.define('MyApp.controller.EscalaVerbal', {
                         message: 'A sua escala foi inserida com sucesso (Device)'
                     });
 //                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
-                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
+//                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
                         title: 'One Button',
@@ -73940,7 +74345,7 @@ Ext.application({
       
 
     views: [
-//        'Login',
+        'Login',
         'Main',
         'EscalaNumerica',
         'EscalaVisual',
@@ -73948,8 +74353,8 @@ Ext.application({
         'EscalaVerbal'
     ],
 
-//    controllers:['Login','EscalaNumerica','EscalaVisual','EscalaSmiles','EscalaVerbal'],
-    controllers:['EscalaNumerica','EscalaVisual','EscalaSmiles','EscalaVerbal'],
+    controllers:['Login','EscalaNumerica','EscalaVisual','EscalaSmiles','EscalaVerbal'],
+//    controllers:['EscalaNumerica','EscalaVisual','EscalaSmiles','EscalaVerbal'],
 
     icon: {
         '57': 'resources/icons/Icon.png',
@@ -73975,7 +74380,7 @@ Ext.application({
 
         // Initialize the main view
         Ext.Viewport.add([
-//            {'xtype': 'loginView'},
+            {'xtype': 'loginView'},
             {'xtype': 'mainMenuView'},
             {'xtype': 'numericScale'},
             {'xtype': 'visualScale'},
