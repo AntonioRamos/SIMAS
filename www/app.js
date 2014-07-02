@@ -73490,50 +73490,7 @@ Ext.define('Ext.viewport.Viewport', {
  * you should **not** use {@link Ext#onReady}.
  */
 
-var doctorItems = [
-        {
-            title: 'Home',
-            iconCls: 'home',
-            items: [
-                {
-                    docked: 'top',
-                    xtype: 'titlebar',
-                    cls:'titleBar',
-                    title: 'Página Inicial',
-                    items: [
-                        {
-                            xtype: 'button',
-                            iconCls: 'list',
-                            ui: 'plain',
-                            handler: function () {
-                                if (Ext.Viewport.getMenus().left.isHidden()) {
-                                    Ext.Viewport.showMenu('left');
-                                }
-                                else {
-                                    Ext.Viewport.hideMenu('left');
-                                }
-                            }
-                        },
-                        {
-                            xtype: 'button',
-                            itemId: 'logOffButton',
-                            align: 'right',
-                            cls:"logoutButton"
-                        }
-                    ]
-                },
-                {
-                    xtype: 'button',
-                    ui: 'normal',
-                    cls:'newScale',
-                    text: 'Aceder à minha escala',
-                    action: 'push-view_0'
-                }
-
-            ]
-        }
-    ],
-    userItems = [
+var userItems = [
         {
             title: 'Home',
             iconCls: 'home',
@@ -73610,6 +73567,10 @@ var doctorItems = [
                     xtype: 'dataview',
 //                    layout:'fit',
                     html:'<div class="dataViewHeader"><div>Valor</div><div>Data</div><div>Escala</div></div>',
+                    masked: {
+                        xtype: 'loadmask',
+                        message: 'A carregar a sua lista...'
+                    },
                     store: {
                         autoLoad: true,
                         fields: ['amount', 'timestamp','table'],
@@ -73636,12 +73597,6 @@ var doctorItems = [
         }
     ];
 
-if (localStorage.getItem('userType') == 'd') {
-    var finalItems = doctorItems;
-} else {
-    var finalItems = userItems;
-}
-
 Ext.define('MyApp.view.Main', {
     extend:  Ext.tab.Panel ,
     alias: 'widget.mainMenuView',
@@ -73650,7 +73605,7 @@ Ext.define('MyApp.view.Main', {
         tabBarPosition: 'bottom',
         itemId: 'configPanel',
         layout: 'card',
-        items: finalItems,
+        items: userItems,
         control: {
             '#logOffButton': {
                 tap: 'onLogOffButtonTap'
@@ -73741,6 +73696,11 @@ Ext.define('MyApp.view.Main', {
 
         var me = this;
 
+        Ext.Viewport.setMasked({
+            xtype: 'loadmask',
+            message: 'A inserir...'
+        });
+
         Ext.Ajax.request({
             url: 'http://www.antonio-ramos.com/sencha/php/getScaleType.php',
             method: 'post',
@@ -73774,6 +73734,19 @@ Ext.define('MyApp.view.Main', {
                             message: 'Esta é a sua primeira inserção. Escolha no menu lateral a escala pretendida...'
                         });
                 }
+
+                Ext.Viewport.setMasked(false);
+            },
+            failure: function(response, opts) {
+
+                Ext.Viewport.setMasked(false);
+
+                Ext.device.Notification.show({
+                    title: 'Erro',
+                    buttons: Ext.MessageBox.OK,
+                    message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
+                });
+//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     },
@@ -73801,7 +73774,7 @@ Ext.define('MyApp.view.EscalaNumerica', {
     extend:  Ext.form.Panel ,
     alias: 'widget.numericScale',
                                                                                                                      
-    id: 'test',
+    id: 'numericScaleViewID',
     config: {
         tabBarPosition: 'bottom',
         items: [
@@ -73815,8 +73788,7 @@ Ext.define('MyApp.view.EscalaNumerica', {
                         docked: 'top',
                         xtype: 'titlebar',
                         cls:'titleBar',
-                        title: 'Projecto SIMAS',
-
+                        title: 'Escala Numérica',
                         items: [
                             {
                                 xtype: 'button',
@@ -73826,7 +73798,6 @@ Ext.define('MyApp.view.EscalaNumerica', {
                             },
                             {
                                 xtype: 'button',
-                                text: '<',
                                 cls: 'bckButton',
                                 action: 'backView',
                                 align: 'left'
@@ -73869,6 +73840,11 @@ Ext.define('MyApp.view.EscalaNumerica', {
                                     userID = 1,
                                     result = Ext.getCmp("numericPanel").items.get(1).getGroupValue();
 
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
+
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
@@ -73887,6 +73863,11 @@ Ext.define('MyApp.view.EscalaNumerica', {
                                 var me = this,
                                     userID = 1,
                                     result = Ext.getCmp("numericPanel").items.get(1).getGroupValue();
+
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
 
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
@@ -73907,6 +73888,11 @@ Ext.define('MyApp.view.EscalaNumerica', {
                                     userID = 1,
                                     result = Ext.getCmp("numericPanel").items.get(1).getGroupValue();
 
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
+
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
@@ -73925,6 +73911,11 @@ Ext.define('MyApp.view.EscalaNumerica', {
                                 var me = this,
                                     userID = 1,
                                     result = Ext.getCmp("numericPanel").items.get(1).getGroupValue();
+
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
 
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
@@ -73945,6 +73936,11 @@ Ext.define('MyApp.view.EscalaNumerica', {
                                     userID = 1,
                                     result = Ext.getCmp("numericPanel").items.get(1).getGroupValue();
 
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
+
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
@@ -73963,6 +73959,11 @@ Ext.define('MyApp.view.EscalaNumerica', {
                                 var me = this,
                                     userID = 1,
                                     result = Ext.getCmp("numericPanel").items.get(1).getGroupValue();
+
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
 
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
@@ -73983,6 +73984,11 @@ Ext.define('MyApp.view.EscalaNumerica', {
                                     userID = 1,
                                     result = Ext.getCmp("numericPanel").items.get(1).getGroupValue();
 
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
+
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
@@ -74001,6 +74007,11 @@ Ext.define('MyApp.view.EscalaNumerica', {
                                 var me = this,
                                     userID = 1,
                                     result = Ext.getCmp("numericPanel").items.get(1).getGroupValue();
+
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
 
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
@@ -74021,6 +74032,11 @@ Ext.define('MyApp.view.EscalaNumerica', {
                                     userID = 1,
                                     result = Ext.getCmp("numericPanel").items.get(1).getGroupValue();
 
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
+
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
@@ -74039,6 +74055,11 @@ Ext.define('MyApp.view.EscalaNumerica', {
                                 var me = this,
                                     userID = 1,
                                     result = Ext.getCmp("numericPanel").items.get(1).getGroupValue();
+
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
 
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
@@ -74059,23 +74080,21 @@ Ext.define('MyApp.view.EscalaNumerica', {
                                     userID = 1,
                                     result = Ext.getCmp("numericPanel").items.get(1).getGroupValue();
 
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
+
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
                     },
                     {
                         xtype: 'label',
+                        cls:'labelNumeric',
                         html: 'Dor Insuportável'
                     }
                 ]
-            },
-            {
-                title: 'Config',
-                iconCls: 'settings'
-            },
-            {
-                title: 'About',
-                iconCls: 'user'
             }
         ],
         control: {
@@ -74103,6 +74122,7 @@ Ext.define('MyApp.view.EscalaNumerica', {
 Ext.define('MyApp.view.EscalaVisual', {
     extend:  Ext.form.Panel ,
     alias: 'widget.visualScale',
+    id:'visualScaleViewID',
                                                                  
     config: {
         tabBarPosition: 'bottom',
@@ -74116,7 +74136,7 @@ Ext.define('MyApp.view.EscalaVisual', {
                     {
                         docked: 'top',
                         xtype: 'titlebar',
-                        title: 'Projecto SIMAS',
+                        title: 'Escala Visual',
                         cls:'titleBar',
                         items: [
                             {
@@ -74127,7 +74147,6 @@ Ext.define('MyApp.view.EscalaVisual', {
                             },
                             {
                                 xtype: 'button',
-                                text: '<',
                                 cls: 'bckButton',
                                 action: 'backView',
                                 align: 'left'
@@ -74149,7 +74168,7 @@ Ext.define('MyApp.view.EscalaVisual', {
                     {
                         docked: 'top',
                         xtype: 'titlebar',
-                        title: 'Escala Visual'
+                        title: 'Deslize o slide'
                     },
                     {
                         xtype: 'sliderfield',
@@ -74165,20 +74184,17 @@ Ext.define('MyApp.view.EscalaVisual', {
                                     userID = 1,
                                     result = Ext.getCmp("visualScaleSlider").getValue();
 
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
+
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
+
                             }
                         }
-
                     }
                 ]
-            },
-            {
-                title: 'Config',
-                iconCls: 'settings'
-            },
-            {
-                title: 'About',
-                iconCls: 'user'
             }
         ],
         control: {
@@ -74198,15 +74214,6 @@ Ext.define('MyApp.view.EscalaVisual', {
                 fn: 'onSubmitCommandTap'
             }
         ]
-    },
-    onSubmitCommandTap: function () {
-
-        var me = this,
-            userID = 1,
-            result = Ext.getCmp("visualScaleSlider").getValue();
-
-        me.fireEvent('onSubmitCommand', me, result, userID);
-
     },
     backButtonHandler: function () {
         Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
@@ -74234,7 +74241,7 @@ Ext.define('MyApp.view.EscalaSmiles', {
                         docked: 'top',
                         xtype: 'titlebar',
                         cls:'titleBar',
-                        title: 'Projecto SIMAS',
+                        title: 'Escala de Smiles',
                         items: [
                             {
                                 xtype: 'button',
@@ -74244,7 +74251,6 @@ Ext.define('MyApp.view.EscalaSmiles', {
                             },
                             {
                                 xtype: 'button',
-                                text: '<',
                                 cls: 'bckButton',
                                 action: 'backView',
                                 align: 'left'
@@ -74280,6 +74286,10 @@ Ext.define('MyApp.view.EscalaSmiles', {
                                     userID = 1,
                                     result =  Ext.getCmp("panelSmiles").items.get(0).getGroupValue();
 
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
@@ -74297,6 +74307,11 @@ Ext.define('MyApp.view.EscalaSmiles', {
                                 var me = this,
                                     userID = 1,
                                     result =  Ext.getCmp("panelSmiles").items.get(0).getGroupValue();
+
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
 
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
@@ -74316,6 +74331,11 @@ Ext.define('MyApp.view.EscalaSmiles', {
                                     userID = 1,
                                     result =  Ext.getCmp("panelSmiles").items.get(0).getGroupValue();
 
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
+
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
@@ -74333,6 +74353,11 @@ Ext.define('MyApp.view.EscalaSmiles', {
                                 var me = this,
                                     userID = 1,
                                     result =  Ext.getCmp("panelSmiles").items.get(0).getGroupValue();
+
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
 
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
@@ -74352,6 +74377,11 @@ Ext.define('MyApp.view.EscalaSmiles', {
                                     userID = 1,
                                     result =  Ext.getCmp("panelSmiles").items.get(0).getGroupValue();
 
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
+
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
                         }
@@ -74369,6 +74399,11 @@ Ext.define('MyApp.view.EscalaSmiles', {
                                 var me = this,
                                     userID = 1,
                                     result =  Ext.getCmp("panelSmiles").items.get(0).getGroupValue();
+
+                                Ext.Viewport.setMasked({
+                                    xtype: 'loadmask',
+                                    message: 'A inserir...'
+                                });
 
                                 ctl.up('panel').fireEvent('onSubmitCommand', me, result, userID);
                             }
@@ -74395,15 +74430,6 @@ Ext.define('MyApp.view.EscalaSmiles', {
             }
         ]
     },
-    onSubmitCommandTap: function () {
-
-        var me = this,
-            userID = 1,
-            result = Ext.getCmp("panelSmiles").items.get(0).getGroupValue();
-
-        me.fireEvent('onSubmitCommand', me, result, userID);
-
-    },
     backButtonHandler: function () {
         Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
         history.pushState(null, "");
@@ -74424,7 +74450,8 @@ var audioInput = null;
 var sampleRate = 44100;
 var audioContext = null;
 var context = null;
-var outputElement = document.getElementById('titleBarScaleVerbal');
+//var outputElement = document.getElementById("titleBarScaleVerbal").getElementsByClassName("x-innerhtml")[0];
+var outputElement = document.getElementById("titleBarScaleVerbal");
 var outputString;
 
 function interleave(leftChannel, rightChannel){
@@ -74500,7 +74527,8 @@ function success(e){
     // reset the buffers for the new recording
     leftchannel.length = rightchannel.length = 0;
     recordingLength = 0;
-    document.getElementById('titleBarScaleVerbal').innerHTML = 'A gravar... Carregue "S" para parar...';
+    var outputElement = document.getElementById("titleBarScaleVerbal").getElementsByClassName("x-innerhtml")[0];
+    outputElement.innerHTML = 'A gravar... Carregue "S" para parar...';
 //                document.getElementById("ext-element-332").innerHTML = 'Parar';
 //    document.getElementById("ext-element-330").style.visibility = 'hidden';
 }
@@ -74522,7 +74550,7 @@ Ext.define('MyApp.view.EscalaVerbal', {
                         docked: 'top',
                         xtype: 'titlebar',
                         cls:'titleBar',
-                        title: 'Projecto SIMAS',
+                        title: 'Escala Verbal',
                         items: [
                             {
                                 xtype: 'button',
@@ -74532,7 +74560,6 @@ Ext.define('MyApp.view.EscalaVerbal', {
                             },
                             {
                                 xtype: 'button',
-                                text: '<',
                                 cls: 'bckButton',
                                 action: 'backView',
                                 align: 'left'
@@ -74555,22 +74582,14 @@ Ext.define('MyApp.view.EscalaVerbal', {
                         docked: 'top',
                         xtype: 'titlebar',
                         id:'titleBarScaleVerbal',
-                        title: 'Escala Verbal'
+                        title: 'Prima o botão para gravar'
                     },
                     {
                         xtype: 'button',
                         html: 'Gravar Audio',
-                        id: 'submitButton-4'
+                        id: 'audioRecordButton'
                     }
                 ]
-            },
-            {
-                title: 'Config',
-                iconCls: 'settings'
-            },
-            {
-                title: 'About',
-                iconCls: 'user'
             }
         ],
         control: {
@@ -74585,7 +74604,7 @@ Ext.define('MyApp.view.EscalaVerbal', {
                 fn: 'onLogOffButtonTap'
             },
             {
-                delegate: '#submitButton-4',
+                delegate: '#audioRecordButton',
                 event: 'tap',
                 fn: 'onSubmitCommandTap'
             }
@@ -74595,7 +74614,8 @@ Ext.define('MyApp.view.EscalaVerbal', {
 
         var me = this;
 
-        if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry|IEMobile)/)) {
+//        if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry|IEMobile)/)) {
+        if (typeof(Ext.os.is.Desktop)=='undefined') {
             Ext.device.Capture.captureAudio({
                 limit: 1, // limit to 2 recordings
                 maximumDuration: 10, // limit to 10 seconds per recording
@@ -74658,7 +74678,7 @@ Ext.define('MyApp.view.EscalaVerbal', {
             });
         } else {
 
-            // http://typedarray.org/from-microphone-to-wav-with-getusermedia-and-web-audio/
+            // todo http://typedarray.org/from-microphone-to-wav-with-getusermedia-and-web-audio/
 
             // feature detection
             if (!navigator.getUserMedia)
@@ -74730,6 +74750,11 @@ Ext.define('MyApp.view.EscalaVerbal', {
 //                    outputElement.innerHTML = 'A gravar o ficheiro...';
                     var url = (window.URL || window.webkitURL).createObjectURL(blob);
 
+                    Ext.Viewport.setMasked({
+                        xtype: 'loadmask',
+                        message: 'A inserir...'
+                    });
+
                     me.fireEvent('onSubmitCommand', me, url, userID,mimeType);
 
                 }
@@ -74782,6 +74807,11 @@ Ext.define('MyApp.view.DoctorAdmin', {
             },
             {
                 xtype: 'dataview',
+                id:'userDoctorID',
+                masked: {
+                    xtype: 'loadmask',
+                    message: 'A carregar a sua lista...'
+                },
                 store: {
                     autoLoad: true,
                     fields: ['id', 'name', 'tablename'],
@@ -74796,7 +74826,6 @@ Ext.define('MyApp.view.DoctorAdmin', {
                 },
                 height: 272,
                 itemTpl:'<tpl for="."><div class="logentry" data-userID="{id}" style="width: 100%"><span style="display:block;width:50%;float:left;text-align: left">{name}</span><span style="display:block;width:50%;float:right;text-align: right">{tablename}</span></div></tpl>',
-                itemSelector: 'div.logentry',
                 trackOver: true,
                 listeners: {
                     'select': function(view, record, item, idx, event, opts) {
@@ -74805,17 +74834,10 @@ Ext.define('MyApp.view.DoctorAdmin', {
 
                         Ext.Viewport.setActiveItem(Ext.Viewport.down('adminSelectScales'));
                         history.pushState(null, "");
-
                     }
                 }
             }
-
         ],
-        control: {
-            'div.logentry':{
-                tap: 'teste'
-            }
-        },
         listeners: [
             {
                 delegate: '#logOffButton',
@@ -74823,8 +74845,6 @@ Ext.define('MyApp.view.DoctorAdmin', {
                 fn: 'onLogOffButtonTap'
             }
         ]
-    }, teste: function () {
-        alert('you clicked the x icon');
     },
     onLogOffButtonTap: function () {
         this.fireEvent('onSignOffCommand');
@@ -74860,7 +74880,6 @@ Ext.define('MyApp.view.AdminSelScales', {
                             },
                             {
                                 xtype: 'button',
-                                text: '<',
                                 cls: 'bckButton',
                                 action: 'backView',
                                 align: 'left'
@@ -74871,28 +74890,24 @@ Ext.define('MyApp.view.AdminSelScales', {
                         xtype: 'button',
                         ui: 'normal',
                         id: 'choosenNumeric',
-//                        text: 'Escala Numerica',
                         action: 'chooseNumeric'
                     },
                     {
                         xtype: 'button',
                         ui: 'normal',
                         id: 'choosenAnalogic',
-//                        text: 'Escala Visual Analogica',
                         action: 'chooseAnalogic'
                     },
                     {
                         xtype: 'button',
                         ui: 'normal',
                         id: 'choosenVerbal',
-//                        text: 'Escala Verbal',
                         action: 'chooseVerbal'
                     },
                     {
                         xtype: 'button',
                         ui: 'normal',
                         id: 'choosenSmiles',
-//                        text: 'Escala de Smiles',
                         action: 'chooseSmiles'
                     }
                 ]
@@ -74924,12 +74939,17 @@ Ext.define('MyApp.view.AdminSelScales', {
         ]
     },
     backButtonHandler: function () {
+        Ext.getCmp('userDoctorID').getStore().load();
         Ext.Viewport.setActiveItem(Ext.Viewport.down('doctorAdmin'));
         history.pushState(null, "");
     },
     backButtonHandler2: function (element) {
-//        alert(userID);
         var tableName = "";
+
+        Ext.Viewport.setMasked({
+            xtype: 'loadmask',
+            message: 'A inserir...'
+        });
 
         switch (element.id) {
             case "choosenNumeric":
@@ -74963,45 +74983,49 @@ Ext.define('MyApp.view.AdminSelScales', {
                     var loginResponse = Ext.JSON.decode(response.responseText);
 
                     if (loginResponse) {
-                        /*Ext.device.Notification.show({
-                         title: 'Informação',
-                         buttons: Ext.MessageBox.OK,
-                         message: 'A sua escala foi inserida com sucesso'
-                         });*/
-                        Ext.Msg.alert('Informação', 'A escala do utente foi alterada com sucesso');
+                        Ext.device.Notification.show({
+                            title: 'Informação',
+                            buttons: Ext.MessageBox.OK,
+                            message: 'A escala do utente foi alterada com sucesso'
+                        });
+//                        Ext.Msg.alert('Informação', 'A escala do utente foi alterada com sucesso');
 //                    Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
                     } else {
-                        /*Ext.device.Notification.show({
-                         title: 'Informação',
-                         buttons: Ext.MessageBox.OK,
-                         message: 'Houve um erro ao inserir a sua escala'
-                         });*/
-                        Ext.Msg.alert('Informação', 'Houve um erro ao alterar a escala');
+                        Ext.device.Notification.show({
+                             title: 'Erro',
+                             buttons: Ext.MessageBox.OK,
+                             message: 'Houve um erro ao alterar a sua escala'
+                         });
+//                        Ext.Msg.alert('Informação', 'Houve um erro ao alterar a escala');
                     }
+                    Ext.Viewport.setMasked(false);
                 },
-                failure: function (response, opts) {
-                    /* Ext.device.Notification.show({
-                     title: 'Informação',
-                     buttons: Ext.MessageBox.OK,
-                     message: 'server-side failure with status code'+ response.status
-                     });*/
-                    Ext.Msg.alert('Informação', 'server-side failure with status code' + response.status);
+                failure: function(response, opts) {
+
+                    Ext.Viewport.setMasked(false);
+
+                    Ext.device.Notification.show({
+                        title: 'Erro',
+                        buttons: Ext.MessageBox.OK,
+                        message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
+                    });
+//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
                 }
             });
         }
-
-
     },
     onLogOffButtonTap: function () {
         this.fireEvent('onSignOffCommand');
     }
 });
 
+// http://miamicoder.com/2012/adding-a-login-screen-to-a-sencha-touch-application/
+
 Ext.define('MyApp.view.Login', {
     extend:  Ext.form.Panel ,
     alias: "widget.loginView",
     id:'loginViewID',
-                                                                                                                                
+                                                                                                                                                 
     config: {
         title: 'Login',
         items: [
@@ -75012,6 +75036,9 @@ Ext.define('MyApp.view.Login', {
             },
             {
                 xtype: 'fieldset',
+                submitOnAction:true,
+                id:'loginFormID',
+                name:'loginForm',
                 items: [
                     {
                         xtype: 'textfield',
@@ -75057,14 +75084,9 @@ Ext.define('MyApp.view.Login', {
 
                     label.hide();
 
-                    // Using a delayed task in order to give the hide animation above
-                    // time to finish before executing the next steps.
                     var task = Ext.create('Ext.util.DelayedTask', function () {
-
                         label.setHtml('');
-
                         me.up().fireEvent('signInCommand', me, username, password);
-
                         usernameField.setValue('');
                         passwordField.setValue('');
                     });
@@ -75076,22 +75098,25 @@ Ext.define('MyApp.view.Login', {
         control: {
             'logInButton': {
                 tap: 'onLogInButtonTap'
+            },
+            'fieldset[name=loginForm]': {
+                action: 'onLogInButtonTap'
+            },
+            'loginFormID': {
+                action: 'onLogInButtonTap'
             }
         }
     },
     initialize: function () {
-//        console.log(this.parent);
         if (localStorage.getItem("loginstatus")) {
             app.getController('Login').signInSuccess();
-//            console.log("logged in:" + this);
+        }
+
+        if (!Ext.device.Connection.isOnline()) {
+            this.showSignInFailedMessage("Por favor, verifique a sua conexão à internet");
+            app.isOnline = false;
         } else {
-            /*if (!Ext.device.Connection.isOnline()) {
-                Ext.Msg.alert('You are currently connected via ' + Ext.device.Connection.getType());
-            } else {
-                Ext.Msg.alert('You are not currently connected');
-            }*/
-//            Ext.getCmp('signInFailedLabel').destroy();
-//            console.log("logged out:" + this);
+            app.isOnline = true;
         }
 
     },
@@ -75102,8 +75127,6 @@ Ext.define('MyApp.view.Login', {
     }
 
 });
-
-// todo http://miamicoder.com/2012/adding-a-login-screen-to-a-sencha-touch-application/
 
 Ext.define('MyApp.controller.Login', {
     extend:  Ext.app.Controller ,
@@ -75146,15 +75169,6 @@ Ext.define('MyApp.controller.Login', {
         }
     },
 
-    // Transitions
-    getSlideLeftTransition: function () {
-        return { type: 'slide', direction: 'left' };
-    },
-
-    getSlideRightTransition: function () {
-        return { type: 'slide', direction: 'right' };
-    },
-
     onSignInCommand: function (view, username, password) {
 
         var me = this,
@@ -75192,24 +75206,15 @@ Ext.define('MyApp.controller.Login', {
                     me.signInFailure('Ocorreu uma falha no login. Por favor, tente novamente.');
                 }
             },
-            failure: function () {
-                me.signInFailure('Ocorreu uma falha no login. Por favor, tente novamente.');
+            failure: function(response, opts) {
+                me.signInFailure('Erro de comunicação. Por favor, verifique a sua ligação à internet.');
+//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     },
 
     signInSuccess: function () {
-//        var loginView = this.getLoginView();
-//        mainMenuView = this.getMainMenuView();
-//        loginView.setMasked(false);
-
         window.location.reload();
-
-//        Ext.Viewport.remove(mainMenuView, true);
-//        Ext.Viewport.add([
-//            {'xtype': 'mainMenuView'}]);
-
-//        Ext.Viewport.animateActiveItem(mainMenuView, this.getSlideLeftTransition());
     },
 
     signInFailure: function (message) {
@@ -75220,11 +75225,6 @@ Ext.define('MyApp.controller.Login', {
 
     onSignOffCommand: function () {
 
-      /*  Ext.Viewport.add([
-            {'xtype': 'loginView'}
-        ]);*/
-
-//        console.log("logofff");
         window.location.reload();
 
         localStorage.removeItem("loginstatus");
@@ -75232,7 +75232,6 @@ Ext.define('MyApp.controller.Login', {
         localStorage.removeItem("userID");
         localStorage.removeItem("userType");
 
-//        Ext.Viewport.animateActiveItem(this.getLoginView(), this.getSlideRightTransition());
     }
 });
 
@@ -75274,29 +75273,33 @@ Ext.define('MyApp.controller.EscalaNumerica', {
                 var loginResponse = Ext.JSON.decode(response.responseText);
 
                 if (loginResponse) {
-                   /*Ext.device.Notification.show({
+                   Ext.device.Notification.show({
                         title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso'
-                    });*/
-                    Ext.Msg.alert('Informação', 'A escala deste utente foi alterada');
+                    });
+//                    Ext.Msg.alert('Informação', 'A escala deste utente foi alterada');
 //                    Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
                 } else {
-                    /*Ext.device.Notification.show({
-                        title: 'Informação',
+                    Ext.device.Notification.show({
+                        title: 'Erro',
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala'
-                    });*/
-                    Ext.Msg.alert('Informação', 'Houve um erro ao alterar a escala');
+                    });
+//                    Ext.Msg.alert('Informação', 'Houve um erro ao alterar a escala');
                 }
+                Ext.Viewport.setMasked(false);
             },
             failure: function(response, opts) {
-               /* Ext.device.Notification.show({
-                    title: 'Informação',
+
+                Ext.Viewport.setMasked(false);
+
+                Ext.device.Notification.show({
+                    title: 'Erro',
                     buttons: Ext.MessageBox.OK,
-                    message: 'server-side failure with status code'+ response.status
-                });*/
-                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
+                    message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
+                });
+//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     }
@@ -75341,7 +75344,7 @@ Ext.define('MyApp.controller.EscalaVisual', {
 
                 if (loginResponse) {
                     Ext.device.Notification.show({
-                        title: 'One Button',
+                        title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso'
                     });
@@ -75349,12 +75352,25 @@ Ext.define('MyApp.controller.EscalaVisual', {
 //                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
-                        title: 'One Button',
+                        title: 'Erro',
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala'
                     });
 //                    Ext.Msg.alert('Informação', 'Houve um erro ao inserir a sua escala');
                 }
+
+                Ext.Viewport.setMasked(false);
+            },
+            failure: function(response, opts) {
+
+                Ext.Viewport.setMasked(false);
+
+                Ext.device.Notification.show({
+                    title: 'Erro',
+                    buttons: Ext.MessageBox.OK,
+                    message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
+                });
+//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     }
@@ -75395,12 +75411,11 @@ Ext.define('MyApp.controller.EscalaSmiles', {
             },
             success: function (response) {
 
-
                 var loginResponse = Ext.JSON.decode(response.responseText);
 
                 if (loginResponse) {
                     Ext.device.Notification.show({
-                        title: 'One Button',
+                        title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso'
                     });
@@ -75408,12 +75423,24 @@ Ext.define('MyApp.controller.EscalaSmiles', {
 //                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
-                        title: 'One Button',
+                        title: 'Erro',
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala'
                     });
 //                    Ext.Msg.alert('Informação', 'Houve um erro ao inserir a sua escala');
                 }
+                Ext.Viewport.setMasked(false);
+            },
+            failure: function(response, opts) {
+
+                Ext.Viewport.setMasked(false);
+
+                Ext.device.Notification.show({
+                    title: 'Erro',
+                    buttons: Ext.MessageBox.OK,
+                    message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
+                });
+//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     }
@@ -75433,6 +75460,8 @@ Ext.define('MyApp.controller.EscalaVerbal', {
         }
     },
 
+    // TODO - Verificar se não se pode juntar os dois
+
     onSubmitCommand: function (view, result, userID2,mimeType) {
 
         var me = this,
@@ -75443,12 +75472,6 @@ Ext.define('MyApp.controller.EscalaVerbal', {
         }else{
             num_userID = userID;
         }
-
-        Ext.device.Notification.show({
-            title: 'One Button',
-            buttons: Ext.MessageBox.OK,
-            message: 'onSubmitCommandDevice'
-        });
 
         Ext.Ajax.request({
             url: 'http://www.antonio-ramos.com/sencha/php/createBlob.php',
@@ -75466,21 +75489,32 @@ Ext.define('MyApp.controller.EscalaVerbal', {
                 var loginResponse = Ext.JSON.decode(response.responseText);
 
                 if (loginResponse) {
-                   /* Ext.device.Notification.show({
-                        title: 'One Button',
+                    Ext.device.Notification.show({
+                        title: 'Informação',
                         buttons: Ext.MessageBox.OK,
-                        message: 'A sua escala foi inserida com sucesso'
-                    });*/
-                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
-                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
+                        message: 'A sua escala foi inserida com sucesso (Desktop)'
+                    });
+//                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
+//                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
-                        title: 'One Button',
+                        title: 'Erro',
                         buttons: Ext.MessageBox.OK,
-                        message: 'Houve um erro ao inserir a sua escala'
+                        message: 'Houve um erro ao inserir a sua escala (Desktop)'
                     });
                 }
+                Ext.Viewport.setMasked(false);
+            },
+            failure: function(response, opts) {
 
+                Ext.Viewport.setMasked(false);
+
+                Ext.device.Notification.show({
+                    title: 'Erro',
+                    buttons: Ext.MessageBox.OK,
+                    message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
+                });
+//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     },
@@ -75513,7 +75547,7 @@ Ext.define('MyApp.controller.EscalaVerbal', {
 
                 if (loginResponse) {
                     Ext.device.Notification.show({
-                        title: 'One Button',
+                        title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso (Device)'
                     });
@@ -75521,13 +75555,25 @@ Ext.define('MyApp.controller.EscalaVerbal', {
 //                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
-                        title: 'One Button',
+                        title: 'Erro',
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala (Device)'
                     });
 //                    Ext.Msg.alert('Informação', 'Houve um erro ao inserir a sua escala');
                 }
+                Ext.Viewport.setMasked(false);
 
+            },
+            failure: function(response, opts) {
+
+                Ext.Viewport.setMasked(false);
+
+                Ext.device.Notification.show({
+                    title: 'Erro',
+                    buttons: Ext.MessageBox.OK,
+                    message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
+                });
+//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     }
@@ -75551,6 +75597,9 @@ Ext.application({
                
                         
       
+
+    isOnline: false,
+//    MyApp.app.isOnline
 
     views: [
         'Login',
@@ -75603,17 +75652,14 @@ Ext.application({
             } else if (localStorage.getItem("userType") == 'd') {
                 Ext.Viewport.add([
                     {'xtype': 'doctorAdmin'},
-                    {'xtype': 'mainMenuView'},
                     {'xtype': 'adminSelectScales'}
                 ]);
             }
         } else {
             Ext.Viewport.add([
-                {'xtype': 'loginView'},
+                {'xtype': 'loginView'}
             ]);
         }
-
-
     },
 
     onUpdated: function () {
@@ -75628,7 +75674,6 @@ Ext.application({
         );
     }
 });
-
 
 // @tag full-page
 // @require C:\xampp\htdocs\MyApp_RAW_SIMAS\app.js
