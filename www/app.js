@@ -36880,6 +36880,247 @@ Ext.define('Ext.Decorator', {
 });
 
 /**
+ * This is a simple way to add an image of any size to your application and have it participate in the layout system
+ * like any other component. This component typically takes between 1 and 3 configurations - a {@link #src}, and
+ * optionally a {@link #height} and a {@link #width}:
+ *
+ *     @example miniphone
+ *     var img = Ext.create('Ext.Img', {
+ *         src: 'http://www.sencha.com/assets/images/sencha-avatar-64x64.png',
+ *         height: 64,
+ *         width: 64
+ *     });
+ *     Ext.Viewport.add(img);
+ *
+ * It's also easy to add an image into a panel or other container using its xtype:
+ *
+ *     @example miniphone
+ *     Ext.create('Ext.Panel', {
+ *         fullscreen: true,
+ *         layout: 'hbox',
+ *         items: [
+ *             {
+ *                 xtype: 'image',
+ *                 src: 'http://www.sencha.com/assets/images/sencha-avatar-64x64.png',
+ *                 flex: 1
+ *             },
+ *             {
+ *                 xtype: 'panel',
+ *                 flex: 2,
+ *                 html: 'Sencha Inc.<br/>1700 Seaport Boulevard Suite 120, Redwood City, CA'
+ *             }
+ *         ]
+ *     });
+ *
+ * Here we created a panel which contains an image (a profile picture in this case) and a text area to allow the user
+ * to enter profile information about themselves. In this case we used an {@link Ext.layout.HBox hbox layout} and
+ * flexed the image to take up one third of the width and the text area to take two thirds of the width. See the
+ * {@link Ext.layout.HBox hbox docs} for more information on flexing items.
+ */
+Ext.define('Ext.Img', {
+    extend:  Ext.Component ,
+    xtype: ['image', 'img'],
+
+    /**
+     * @event tap
+     * Fires whenever the component is tapped
+     * @param {Ext.Img} this The Image instance
+     * @param {Ext.EventObject} e The event object
+     */
+
+    /**
+     * @event load
+     * Fires when the image is loaded
+     * @param {Ext.Img} this The Image instance
+     * @param {Ext.EventObject} e The event object
+     */
+
+    /**
+     * @event error
+     * Fires if an error occured when trying to load the image
+     * @param {Ext.Img} this The Image instance
+     * @param {Ext.EventObject} e The event object
+     */
+
+    config: {
+        /**
+         * @cfg {String} src The source of this image
+         * @accessor
+         */
+        src: null,
+
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        baseCls : Ext.baseCSSPrefix + 'img',
+
+        /**
+         * @cfg {String} imageCls The CSS class to be used when {@link #mode} is not set to 'background'
+         * @accessor
+         */
+        imageCls : Ext.baseCSSPrefix + 'img-image',
+
+        /**
+         * @cfg {String} backgroundCls The CSS class to be used when {@link #mode} is set to 'background'
+         * @accessor
+         */
+        backgroundCls : Ext.baseCSSPrefix + 'img-background',
+
+        /**
+         * @cfg {String} mode If set to 'background', uses a background-image CSS property instead of an
+         * `<img>` tag to display the image.
+         */
+        mode: 'background'
+    },
+
+    beforeInitialize: function() {
+        var me = this;
+        me.onLoad = Ext.Function.bind(me.onLoad, me);
+        me.onError = Ext.Function.bind(me.onError, me);
+    },
+
+    initialize: function() {
+        var me = this;
+        me.callParent();
+
+        me.relayEvents(me.renderElement, '*');
+
+        me.element.on({
+            tap: 'onTap',
+            scope: me
+        });
+    },
+
+    hide: function() {
+        this.callParent(arguments);
+        this.hiddenSrc = this.hiddenSrc || this.getSrc();
+        this.setSrc(null);
+    },
+
+    show: function() {
+        this.callParent(arguments);
+        if (this.hiddenSrc) {
+            this.setSrc(this.hiddenSrc);
+            delete this.hiddenSrc;
+        }
+    },
+
+    updateMode: function(mode) {
+        var me            = this,
+            imageCls      = me.getImageCls(),
+            backgroundCls = me.getBackgroundCls();
+
+        if (mode === 'background') {
+            if (me.imageElement) {
+                me.imageElement.destroy();
+                delete me.imageElement;
+                me.updateSrc(me.getSrc());
+            }
+
+            me.replaceCls(imageCls, backgroundCls);
+        } else {
+            me.imageElement = me.element.createChild({ tag: 'img' });
+
+            me.replaceCls(backgroundCls, imageCls);
+        }
+    },
+
+    updateImageCls : function (newCls, oldCls) {
+        this.replaceCls(oldCls, newCls);
+    },
+
+    updateBackgroundCls : function (newCls, oldCls) {
+        this.replaceCls(oldCls, newCls);
+    },
+
+    onTap: function(e) {
+        this.fireEvent('tap', this, e);
+    },
+
+    onAfterRender: function() {
+        this.updateSrc(this.getSrc());
+    },
+
+    /**
+     * @private
+     */
+    updateSrc: function(newSrc) {
+        var me = this,
+            dom;
+
+        if (me.getMode() === 'background') {
+            dom = this.imageObject || new Image();
+        }
+        else {
+            dom = me.imageElement.dom;
+        }
+
+        this.imageObject = dom;
+
+        dom.setAttribute('src', Ext.isString(newSrc) ? newSrc : '');
+        dom.addEventListener('load', me.onLoad, false);
+        dom.addEventListener('error', me.onError, false);
+    },
+
+    detachListeners: function() {
+        var dom = this.imageObject;
+
+        if (dom) {
+            dom.removeEventListener('load', this.onLoad, false);
+            dom.removeEventListener('error', this.onError, false);
+        }
+    },
+
+    onLoad : function(e) {
+        this.detachListeners();
+
+        if (this.getMode() === 'background') {
+            this.element.dom.style.backgroundImage = 'url("' + this.imageObject.src + '")';
+        }
+
+        this.fireEvent('load', this, e);
+    },
+
+    onError : function(e) {
+        this.detachListeners();
+
+        // Attempt to set the src even though the error event fired.
+        if (this.getMode() === 'background') {
+            this.element.dom.style.backgroundImage = 'url("' + this.imageObject.src + '")';
+        }
+
+        this.fireEvent('error', this, e);
+    },
+
+    doSetWidth: function(width) {
+        var sizingElement = (this.getMode() === 'background') ? this.element : this.imageElement;
+
+        sizingElement.setWidth(width);
+
+        this.callParent(arguments);
+    },
+
+    doSetHeight: function(height) {
+        var sizingElement = (this.getMode() === 'background') ? this.element : this.imageElement;
+
+        sizingElement.setHeight(height);
+
+        this.callParent(arguments);
+    },
+
+    destroy: function() {
+        this.detachListeners();
+
+        Ext.destroy(this.imageObject, this.imageElement);
+        delete this.imageObject;
+        delete this.imageElement;
+
+        this.callParent();
+    }
+});
+
+/**
  * A simple label component which allows you to insert content using {@link #html} configuration.
  *
  *     @example miniphone
@@ -58876,6 +59117,589 @@ Ext.define('Ext.direct.Manager', {
 });
 
 /**
+ * @aside guide ajax
+ * @singleton
+ *
+ * This class is used to create JsonP requests. JsonP is a mechanism that allows for making requests for data cross
+ * domain. More information is available [here](http://en.wikipedia.org/wiki/JSONP).
+ *
+ * ## Example
+ *
+ *     @example preview
+ *     Ext.Viewport.add({
+ *         xtype: 'button',
+ *         text: 'Make JsonP Request',
+ *         centered: true,
+ *         handler: function(button) {
+ *             // Mask the viewport
+ *             Ext.Viewport.mask();
+ *
+ *             // Remove the button
+ *             button.destroy();
+ *
+ *             // Make the JsonP request
+ *             Ext.data.JsonP.request({
+ *                 url: 'http://free.worldweatheronline.com/feed/weather.ashx',
+ *                 callbackKey: 'callback',
+ *                 params: {
+ *                     key: '23f6a0ab24185952101705',
+ *                     q: '94301', // Palo Alto
+ *                     format: 'json',
+ *                     num_of_days: 5
+ *                 },
+ *                 success: function(result, request) {
+ *                     // Unmask the viewport
+ *                     Ext.Viewport.unmask();
+ *
+ *                     // Get the weather data from the json object result
+ *                     var weather = result.data.weather;
+ *                     if (weather) {
+ *                         // Style the viewport html, and set the html of the max temperature
+ *                         Ext.Viewport.setStyleHtmlContent(true);
+ *                         Ext.Viewport.setHtml('The temperature in Palo Alto is <b>' + weather[0].tempMaxF + '° F</b>');
+ *                     }
+ *                 }
+ *             });
+ *         }
+ *     });
+ *
+ * See the {@link #request} method for more details on making a JsonP request.
+ */
+Ext.define('Ext.data.JsonP', {
+    alternateClassName: 'Ext.util.JSONP',
+
+    /* Begin Definitions */
+
+    singleton: true,
+
+
+    /* End Definitions */
+
+    /**
+     * Number of requests done so far.
+     * @private
+     */
+    requestCount: 0,
+
+    /**
+     * Hash of pending requests.
+     * @private
+     */
+    requests: {},
+
+    /**
+     * @property {Number} [timeout=30000]
+     * A default timeout (in milliseconds) for any JsonP requests. If the request has not completed in this time the failure callback will
+     * be fired.
+     */
+    timeout: 30000,
+
+    /**
+     * @property {Boolean} disableCaching
+     * `true` to add a unique cache-buster param to requests.
+     */
+    disableCaching: true,
+
+    /**
+     * @property {String} disableCachingParam
+     * Change the parameter which is sent went disabling caching through a cache buster.
+     */
+    disableCachingParam: '_dc',
+
+    /**
+     * @property {String} callbackKey
+     * Specifies the GET parameter that will be sent to the server containing the function name to be executed when the
+     * request completes. Thus, a common request will be in the form of:
+     * `url?callback=Ext.data.JsonP.callback1`
+     */
+    callbackKey: 'callback',
+
+    /**
+     * Makes a JSONP request.
+     * @param {Object} options An object which may contain the following properties. Note that options will take
+     * priority over any defaults that are specified in the class.
+     *
+     * @param {String} options.url  The URL to request.
+     * @param {Object} [options.params]  An object containing a series of key value pairs that will be sent along with the request.
+     * @param {Number} [options.timeout]  See {@link #timeout}
+     * @param {String} [options.callbackKey]  See {@link #callbackKey}
+     * @param {String} [options.callbackName]  See {@link #callbackKey}
+     *   The function name to use for this request. By default this name will be auto-generated: Ext.data.JsonP.callback1,
+     *   Ext.data.JsonP.callback2, etc. Setting this option to "my_name" will force the function name to be
+     *   Ext.data.JsonP.my_name. Use this if you want deterministic behavior, but be careful - the callbackName should be
+     *   different in each JsonP request that you make.
+     * @param {Boolean}  [options.disableCaching]  See {@link #disableCaching}
+     * @param {String}   [options.disableCachingParam]  See {@link #disableCachingParam}
+     * @param {Function} [options.success]  A function to execute if the request succeeds.
+     * @param {Function} [options.failure]  A function to execute if the request fails.
+     * @param {Function} [options.callback]  A function to execute when the request completes, whether it is a success or failure.
+     * @param {Object}   [options.scope]  The scope in which to execute the callbacks: The "this" object for the
+     *   callback function. Defaults to the browser window.
+     *
+     * @return {Object}  request An object containing the request details.
+     */
+    request: function(options){
+        options = Ext.apply({}, options);
+
+        if (!options.url) {
+            Ext.Logger.error('A url must be specified for a JSONP request.');
+        }
+
+        var me = this,
+            disableCaching = Ext.isDefined(options.disableCaching) ? options.disableCaching : me.disableCaching,
+            cacheParam = options.disableCachingParam || me.disableCachingParam,
+            id = ++me.requestCount,
+            callbackName = options.callbackName || 'callback' + id,
+            callbackKey = options.callbackKey || me.callbackKey,
+            timeout = Ext.isDefined(options.timeout) ? options.timeout : me.timeout,
+            params = Ext.apply({}, options.params),
+            url = options.url,
+            name = Ext.isSandboxed ? Ext.getUniqueGlobalNamespace() : 'Ext',
+            request,
+            script;
+
+        params[callbackKey] = name + '.data.JsonP.' + callbackName;
+        if (disableCaching) {
+            params[cacheParam] = new Date().getTime();
+        }
+
+        script = me.createScript(url, params, options);
+
+        me.requests[id] = request = {
+            url: url,
+            params: params,
+            script: script,
+            id: id,
+            scope: options.scope,
+            success: options.success,
+            failure: options.failure,
+            callback: options.callback,
+            callbackKey: callbackKey,
+            callbackName: callbackName
+        };
+
+        if (timeout > 0) {
+            request.timeout = setTimeout(Ext.bind(me.handleTimeout, me, [request]), timeout);
+        }
+
+        me.setupErrorHandling(request);
+        me[callbackName] = Ext.bind(me.handleResponse, me, [request], true);
+        me.loadScript(request);
+        return request;
+    },
+
+    /**
+     * Abort a request. If the request parameter is not specified all open requests will be aborted.
+     * @param {Object/String} request The request to abort.
+     */
+    abort: function(request){
+        var requests = this.requests,
+            key;
+
+        if (request) {
+            if (!request.id) {
+                request = requests[request];
+            }
+            this.handleAbort(request);
+        } else {
+            for (key in requests) {
+                if (requests.hasOwnProperty(key)) {
+                    this.abort(requests[key]);
+                }
+            }
+        }
+    },
+
+    /**
+     * Sets up error handling for the script.
+     * @private
+     * @param {Object} request The request.
+     */
+    setupErrorHandling: function(request){
+        request.script.onerror = Ext.bind(this.handleError, this, [request]);
+    },
+
+    /**
+     * Handles any aborts when loading the script.
+     * @private
+     * @param {Object} request The request.
+     */
+    handleAbort: function(request){
+        request.errorType = 'abort';
+        this.handleResponse(null, request);
+    },
+
+    /**
+     * Handles any script errors when loading the script.
+     * @private
+     * @param {Object} request The request.
+     */
+    handleError: function(request){
+        request.errorType = 'error';
+        this.handleResponse(null, request);
+    },
+
+    /**
+     * Cleans up any script handling errors.
+     * @private
+     * @param {Object} request The request.
+     */
+    cleanupErrorHandling: function(request){
+        request.script.onerror = null;
+    },
+
+    /**
+     * Handle any script timeouts.
+     * @private
+     * @param {Object} request The request.
+     */
+    handleTimeout: function(request){
+        request.errorType = 'timeout';
+        this.handleResponse(null, request);
+    },
+
+    /**
+     * Handle a successful response
+     * @private
+     * @param {Object} result The result from the request
+     * @param {Object} request The request
+     */
+    handleResponse: function(result, request){
+        var success = true;
+
+        if (request.timeout) {
+            clearTimeout(request.timeout);
+        }
+
+        delete this[request.callbackName];
+        delete this.requests[request.id];
+
+        this.cleanupErrorHandling(request);
+        Ext.fly(request.script).destroy();
+
+        if (request.errorType) {
+            success = false;
+            Ext.callback(request.failure, request.scope, [request.errorType, request]);
+        } else {
+            Ext.callback(request.success, request.scope, [result, request]);
+        }
+        Ext.callback(request.callback, request.scope, [success, result, request.errorType, request]);
+    },
+
+    /**
+     * Create the script tag given the specified url, params and options. The options
+     * parameter is passed to allow an override to access it.
+     * @private
+     * @param {String} url The url of the request
+     * @param {Object} params Any extra params to be sent
+     * @param {Object} options The object passed to {@link #request}.
+     */
+    createScript: function(url, params, options) {
+        var script = document.createElement('script');
+        script.setAttribute("src", Ext.urlAppend(url, Ext.Object.toQueryString(params)));
+        script.setAttribute("async", true);
+        script.setAttribute("type", "text/javascript");
+        return script;
+    },
+
+    /**
+     * Loads the script for the given request by appending it to the HEAD element. This is
+     * its own method so that users can override it (as well as {@link #createScript}).
+     * @private
+     * @param {Object} request The request object.
+     */
+    loadScript: function (request) {
+        Ext.getHead().appendChild(request.script);
+    }
+});
+
+/**
+ * @author Ed Spencer
+ * @aside guide proxies
+ *
+ * The JsonP proxy is useful when you need to load data from a domain other than the one your application is running on. If
+ * your application is running on http://domainA.com it cannot use {@link Ext.data.proxy.Ajax Ajax} to load its data
+ * from http://domainB.com because cross-domain ajax requests are prohibited by the browser.
+ *
+ * We can get around this using a JsonP proxy. JsonP proxy injects a `<script>` tag into the DOM whenever an AJAX request
+ * would usually be made. Let's say we want to load data from http://domainB.com/users - the script tag that would be
+ * injected might look like this:
+ *
+ *     <script src="http://domainB.com/users?callback=someCallback"></script>
+ *
+ * When we inject the tag above, the browser makes a request to that url and includes the response as if it was any
+ * other type of JavaScript include. By passing a callback in the url above, we're telling domainB's server that we want
+ * to be notified when the result comes in and that it should call our callback function with the data it sends back. So
+ * long as the server formats the response to look like this, everything will work:
+ *
+ *     someCallback({
+ *         users: [
+ *             {
+ *                 id: 1,
+ *                 name: "Ed Spencer",
+ *                 email: "ed@sencha.com"
+ *             }
+ *         ]
+ *     });
+ *
+ * As soon as the script finishes loading, the 'someCallback' function that we passed in the url is called with the JSON
+ * object that the server returned.
+ *
+ * JsonP proxy takes care of all of this automatically. It formats the url you pass, adding the callback parameter
+ * automatically. It even creates a temporary callback function, waits for it to be called and then puts the data into
+ * the Proxy making it look just like you loaded it through a normal {@link Ext.data.proxy.Ajax AjaxProxy}. Here's how
+ * we might set that up:
+ *
+ *     Ext.define('User', {
+ *         extend: 'Ext.data.Model',
+ *         config: {
+ *             fields: ['id', 'name', 'email']
+ *         }
+ *     });
+ *
+ *     var store = Ext.create('Ext.data.Store', {
+ *         model: 'User',
+ *         proxy: {
+ *             type: 'jsonp',
+ *             url : 'http://domainB.com/users'
+ *         }
+ *     });
+ *
+ *     store.load();
+ *
+ * That's all we need to do - JsonP proxy takes care of the rest. In this case the Proxy will have injected a script tag
+ * like this:
+ *
+ *     <script src="http://domainB.com/users?callback=callback1"></script>
+ *
+ * # Customization
+ *
+ * This script tag can be customized using the {@link #callbackKey} configuration. For example:
+ *
+ *     var store = Ext.create('Ext.data.Store', {
+ *         model: 'User',
+ *         proxy: {
+ *             type: 'jsonp',
+ *             url : 'http://domainB.com/users',
+ *             callbackKey: 'theCallbackFunction'
+ *         }
+ *     });
+ *
+ *     store.load();
+ *
+ * Would inject a script tag like this:
+ *
+ *     <script src="http://domainB.com/users?theCallbackFunction=callback1"></script>
+ *
+ * # Implementing on the server side
+ *
+ * The remote server side needs to be configured to return data in this format. Here are suggestions for how you might
+ * achieve this using Java, PHP and ASP.net:
+ *
+ * Java:
+ *
+ *     boolean jsonP = false;
+ *     String cb = request.getParameter("callback");
+ *     if (cb != null) {
+ *         jsonP = true;
+ *         response.setContentType("text/javascript");
+ *     } else {
+ *         response.setContentType("application/x-json");
+ *     }
+ *     Writer out = response.getWriter();
+ *     if (jsonP) {
+ *         out.write(cb + "(");
+ *     }
+ *     out.print(dataBlock.toJsonString());
+ *     if (jsonP) {
+ *         out.write(");");
+ *     }
+ *
+ * PHP:
+ *
+ *     $callback = $_REQUEST['callback'];
+ *
+ *     // Create the output object.
+ *     $output = array('a' => 'Apple', 'b' => 'Banana');
+ *
+ *     //start output
+ *     if ($callback) {
+ *         header('Content-Type: text/javascript');
+ *         echo $callback . '(' . json_encode($output) . ');';
+ *     } else {
+ *         header('Content-Type: application/x-json');
+ *         echo json_encode($output);
+ *     }
+ *
+ * ASP.net:
+ *
+ *     String jsonString = "{success: true}";
+ *     String cb = Request.Params.Get("callback");
+ *     String responseString = "";
+ *     if (!String.IsNullOrEmpty(cb)) {
+ *         responseString = cb + "(" + jsonString + ")";
+ *     } else {
+ *         responseString = jsonString;
+ *     }
+ *     Response.Write(responseString);
+ */
+Ext.define('Ext.data.proxy.JsonP', {
+    extend:  Ext.data.proxy.Server ,
+    alternateClassName: 'Ext.data.ScriptTagProxy',
+    alias: ['proxy.jsonp', 'proxy.scripttag'],
+                                 
+
+    config: {
+        defaultWriterType: 'base',
+
+        /**
+         * @cfg {String} callbackKey
+         * See {@link Ext.data.JsonP#callbackKey}.
+         * @accessor
+         */
+        callbackKey : 'callback',
+
+        /**
+         * @cfg {String} recordParam
+         * The param name to use when passing records to the server (e.g. 'records=someEncodedRecordString').
+         * @accessor
+         */
+        recordParam: 'records',
+
+        /**
+         * @cfg {Boolean} autoAppendParams
+         * `true` to automatically append the request's params to the generated url.
+         * @accessor
+         */
+        autoAppendParams: true
+    },
+
+    /**
+     * Performs the read request to the remote domain. JsonP proxy does not actually create an Ajax request,
+     * instead we write out a `<script>` tag based on the configuration of the internal Ext.data.Request object
+     * @param {Ext.data.Operation} operation The {@link Ext.data.Operation Operation} object to execute.
+     * @param {Function} callback A callback function to execute when the Operation has been completed.
+     * @param {Object} scope The scope to execute the callback in.
+     * @return {Object}
+     * @protected
+     */
+    doRequest: function(operation, callback, scope) {
+        var action = operation.getAction();
+        if (action !== 'read') {
+            Ext.Logger.error('JsonP proxies can only be used to read data.');
+        }
+
+        //generate the unique IDs for this request
+        var me      = this,
+            request = me.buildRequest(operation),
+            params  = request.getParams();
+
+        // apply JsonP proxy-specific attributes to the Request
+        request.setConfig({
+            callbackKey: me.getCallbackKey(),
+            timeout: me.getTimeout(),
+            scope: me,
+            callback: me.createRequestCallback(request, operation, callback, scope)
+        });
+
+        // Prevent doubling up because the params are already added to the url in buildUrl
+        if (me.getAutoAppendParams()) {
+            request.setParams({});
+        }
+
+        request.setJsonP(Ext.data.JsonP.request(request.getCurrentConfig()));
+
+        // Set the params back once we have made the request though
+        request.setParams(params);
+
+        operation.setStarted();
+
+        me.lastRequest = request;
+
+        return request;
+    },
+
+    /**
+     * @private
+     * Creates and returns the function that is called when the request has completed. The returned function
+     * should accept a Response object, which contains the response to be read by the configured Reader.
+     * The third argument is the callback that should be called after the request has been completed and the Reader has decoded
+     * the response. This callback will typically be the callback passed by a store, e.g. in proxy.read(operation, theCallback, scope)
+     * theCallback refers to the callback argument received by this function.
+     * See {@link #doRequest} for details.
+     * @param {Ext.data.Request} request The Request object.
+     * @param {Ext.data.Operation} operation The Operation being executed.
+     * @param {Function} callback The callback function to be called when the request completes. This is usually the callback
+     * passed to doRequest.
+     * @param {Object} scope The scope in which to execute the callback function.
+     * @return {Function} The callback function.
+     */
+    createRequestCallback: function(request, operation, callback, scope) {
+        var me = this;
+
+        return function(success, response, errorType) {
+            delete me.lastRequest;
+            me.processResponse(success, operation, request, response, callback, scope);
+        };
+    },
+
+    // @inheritdoc
+    setException: function(operation, response) {
+        operation.setException(operation.getRequest().getJsonP().errorType);
+    },
+
+
+    /**
+     * Generates a url based on a given Ext.data.Request object. Adds the params and callback function name to the url
+     * @param {Ext.data.Request} request The request object.
+     * @return {String} The url.
+     */
+    buildUrl: function(request) {
+        var me      = this,
+            url     = me.callParent(arguments),
+            params  = Ext.apply({}, request.getParams()),
+            filters = params.filters,
+            filter, i, value;
+
+        delete params.filters;
+
+        if (me.getAutoAppendParams()) {
+            url = Ext.urlAppend(url, Ext.Object.toQueryString(params));
+        }
+
+        if (filters && filters.length) {
+            for (i = 0; i < filters.length; i++) {
+                filter = filters[i];
+                value = filter.getValue();
+                if (value) {
+                    url = Ext.urlAppend(url, filter.getProperty() + "=" + value);
+                }
+            }
+        }
+
+        return url;
+    },
+
+    /**
+     * @inheritdoc
+     */
+    destroy: function() {
+        this.abort();
+        this.callParent(arguments);
+    },
+
+    /**
+     * Aborts the current server request if one is currently running.
+     */
+    abort: function() {
+        var lastRequest = this.lastRequest;
+        if (lastRequest) {
+            Ext.data.JsonP.abort(lastRequest.getJsonP());
+        }
+    }
+});
+
+/**
  * @aside video list
  * @aside guide list
  *
@@ -72666,196 +73490,167 @@ Ext.define('Ext.viewport.Viewport', {
  * you should **not** use {@link Ext#onReady}.
  */
 
-Ext.define('MyApp.view.Login', {
-    extend:  Ext.form.Panel ,
-    alias: "widget.loginView",
-                                                                                            
-    config: {
-        title: 'Login',
-        items: [
-            {
-                xtype: 'label',
-                html: 'Login failed. Please enter the correct credentials.',
-                id: 'signInFailedLabel',
-                hidden: true,
-                hideAnimation: 'fadeOut',
-                showAnimation: 'fadeIn',
-                style: 'color:#990000;margin:5px 0px;'
-            },
-            {
-                xtype: 'fieldset',
-                title: 'Login',
-                items: [
-                    {
-                        xtype: 'textfield',
-                        placeHolder: 'Username',
-                        id: 'userNameTextField',
-                        name: 'userNameTextField',
-                        required: true
-                    },
-                    {
-                        xtype: 'passwordfield',
-                        placeHolder: 'Password',
-                        id: 'passwordTextField',
-                        name: 'passwordTextField',
-                        required: true
-                    }
-                ]
-            },
-            {
-                xtype: 'button',
-                id: 'logInButton',
-                ui: 'action',
-                padding: '10px',
-                text: 'Log In',
-                handler:function(element){
-
-                    var me = element,
-                        usernameField = Ext.getCmp('userNameTextField'),
-                        passwordField = Ext.getCmp('passwordTextField'),
-                        label = Ext.getCmp('signInFailedLabel'),
-                        username = usernameField.getValue(),
-                        password = passwordField.getValue();
-
-                    label.hide();
-
-                    // Using a delayed task in order to give the hide animation above
-                    // time to finish before executing the next steps.
-                    var task = Ext.create('Ext.util.DelayedTask', function () {
-
-                        label.setHtml('');
-
-                        me.up().fireEvent('signInCommand', me, username, password);
-
-                        usernameField.setValue('');
-                        passwordField.setValue('');
-                    });
-
-                    task.delay(500);
+var doctorItems = [
+        {
+            title: 'Home',
+            iconCls: 'home',
+            items: [
+                {
+                    docked: 'top',
+                    xtype: 'titlebar',
+                    cls:'titleBar',
+                    title: 'Página Inicial',
+                    items: [
+                        {
+                            xtype: 'button',
+                            iconCls: 'list',
+                            ui: 'plain',
+                            handler: function () {
+                                if (Ext.Viewport.getMenus().left.isHidden()) {
+                                    Ext.Viewport.showMenu('left');
+                                }
+                                else {
+                                    Ext.Viewport.hideMenu('left');
+                                }
+                            }
+                        },
+                        {
+                            xtype: 'button',
+                            itemId: 'logOffButton',
+                            align: 'right',
+                            cls:"logoutButton"
+                        }
+                    ]
+                },
+                {
+                    xtype: 'button',
+                    ui: 'normal',
+                    cls:'newScale',
+                    text: 'Aceder à minha escala',
+                    action: 'push-view_0'
                 }
-            }
-        ]
-    },control:{
-        'logInButton':{
-            tap: 'onLogInButtonTap'
+
+            ]
         }
-    },
-    onLogInButtonTap: function () {
+    ],
+    userItems = [
+        {
+            title: 'Home',
+            iconCls: 'home',
+            items: [
+                {
+                    docked: 'top',
+                    xtype: 'titlebar',
+                    cls:'titleBar',
+                    title: 'Página Inicial',
+                    items: [
+                        {
+                            xtype: 'button',
+                            iconCls: 'list',
+                            ui: 'plain',
+                            handler: function () {
+                                if (Ext.Viewport.getMenus().left.isHidden()) {
+                                    Ext.Viewport.showMenu('left');
+                                }
+                                else {
+                                    Ext.Viewport.hideMenu('left');
+                                }
+                            }
+                        },
+                        {
+                            xtype: 'button',
+                            itemId: 'logOffButton',
+                            align: 'right',
+                            cls:"logoutButton"
+                        }
+                    ]
+                },
+                {
+                    xtype: 'button',
+                    ui: 'normal',
+                    cls:'newScale',
+                    text: '+',
+                    action: 'push-view_0'
+                }
 
-        alert("teste");
+            ]
+        },
+        {
+            title: 'Registos',
+            iconCls: 'time',
+            items: [
+                {
+                    docked: 'top',
+                    xtype: 'titlebar',
+                    cls:'titleBar',
+                    title: 'Registos pessoais',
+                    items: [
+                        {
+                            xtype: 'button',
+                            iconCls: 'list',
+                            ui: 'plain',
+                            handler: function () {
+                                if (Ext.Viewport.getMenus().left.isHidden()) {
+                                    Ext.Viewport.showMenu('left');
+                                }
+                                else {
+                                    Ext.Viewport.hideMenu('left');
+                                }
+                            }
+                        },
+                        {
+                            xtype: 'button',
+                            itemId: 'logOffButton',
+                            align: 'right',
+                            cls:"logoutButton"
+                        }
+                    ]
+                },
+                {
+                    xtype: 'dataview',
+//                    layout:'fit',
+                    html:'<div class="dataViewHeader"><div>Valor</div><div>Data</div><div>Escala</div></div>',
+                    store: {
+                        autoLoad: true,
+                        fields: ['amount', 'timestamp','table'],
+                        sorters: [
+                            {
+                                property: 'timestamp',
+                                direction: 'DESC'
+                            }
+                        ],
+                        proxy: {
+                            type: 'jsonp',
+                            url: 'http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID"),
+                            reader: {
+                                type: 'json',
+                                rootProperty: 'data'
+                            }
+                        }
+                    },
+                    height: 1500,
+                    itemTpl: '<div class="dataItem" style="width: 100%"><div style="width: 33%;float:left;">{amount}</div><div style="width: 33%;float:left;">{timestamp}</div><div style="width: 33%;float:left;">{table}</div></div>',
+                    trackOver: true
+                }
+            ]
+        }
+    ];
 
-    },
-    showSignInFailedMessage: function (message) {
-        var label = this.down('#signInFailedLabel');
-        label.setHtml(message);
-        label.show();
-    }
-
-});
-
-// todo http://miamicoder.com/2012/adding-a-login-screen-to-a-sencha-touch-application/
+if (localStorage.getItem('userType') == 'd') {
+    var finalItems = doctorItems;
+} else {
+    var finalItems = userItems;
+}
 
 Ext.define('MyApp.view.Main', {
     extend:  Ext.tab.Panel ,
     alias: 'widget.mainMenuView',
-                                                                                    
+                                                                                                                              
     config: {
         tabBarPosition: 'bottom',
         itemId: 'configPanel',
         layout: 'card',
-        items: [
-            {
-                title: 'Home',
-                iconCls: 'home',
-                items: [
-                    {
-                        docked: 'top',
-                        xtype: 'titlebar',
-                        title: 'Projecto SIMAS - Menu Inicial',
-                        items: [
-                            {
-                                xtype: 'button',
-                                iconCls: 'list',
-                                ui: 'plain',
-                                handler: function () {
-                                    if (Ext.Viewport.getMenus().left.isHidden()) {
-                                        Ext.Viewport.showMenu('left');
-                                    }
-                                    else {
-                                        Ext.Viewport.hideMenu('left');
-                                    }
-                                }
-                            }
-                        ]
-                    },
-                    {
-                        xtype: 'button',
-                        ui: 'normal',
-                        text: 'Aceder à minha escala',
-                        action: 'push-view_0'
-                    }
-
-                ]
-            },
-            {
-                title: 'Config',
-                iconCls: 'settings',
-                styleHtmlContent: true,
-                scrollable: true,
-                items: [
-                    {
-                        docked: 'top',
-                        xtype: 'titlebar',
-                        title: 'Projecto SIMAS - Escolha de Escalas',
-                        items: [
-                            {
-                                xtype: 'button',
-                                text: 'Log Off',
-                                itemId: 'logOffButton',
-                                align: 'right'
-                            }
-                        ]
-                    },
-                    {
-                        xtype: 'button',
-                        ui: 'normal',
-                        text: 'Escala Numérica',
-                        action: 'push-view_1'
-                    },
-                    {
-                        xtype: 'button',
-                        ui: 'normal',
-                        text: 'Escala Descritiva Verbal',
-                        action: 'push-view_2'
-                    },
-                    {
-                        xtype: 'button',
-                        ui: 'normal',
-                        text: 'Escala Visual Analógica',
-                        action: 'push-view_3'
-                    },
-                    {
-                        xtype: 'button',
-                        ui: 'normal',
-                        text: 'Escala de smiles',
-                        action: 'push-view_4'
-                    }
-                ]
-            },
-            {
-                title: 'Sobre',
-                iconCls: 'user',
-                items: [
-                    {
-                        docked: 'top',
-                        xtype: 'titlebar',
-                        title: 'Projecto SIMAS - Sobre'
-                    }
-                ],
-                html: 'Projecto desenvolvido pelo aluno António Ramos (2081043) para a disciplina ' +
-                    'Projecto Informático'
-            }
-        ],
+        items: finalItems,
         control: {
             '#logOffButton': {
                 tap: 'onLogOffButtonTap'
@@ -72879,9 +73674,7 @@ Ext.define('MyApp.view.Main', {
                 tap: 'backButtonHandler'
             }
 
-        }
-        ,listeners:
-        {
+        }, listeners: {
             initialize: function () {
                 Ext.Viewport.setMenu(this.createMenu('left'), {
                     side: 'left',
@@ -72953,7 +73746,7 @@ Ext.define('MyApp.view.Main', {
             method: 'post',
             useDefaultXhrHeader: false,
             params: {
-                userID: 1
+                userID: localStorage.getItem("userID")
             },
             success: function (response) {
 
@@ -72976,9 +73769,9 @@ Ext.define('MyApp.view.Main', {
                         break;
                     default:
                         Ext.device.Notification.show({
-                            title: 'One Button',
+                            title: 'Informação',
                             buttons: Ext.MessageBox.OK,
-                            message: 'Esta é a sua primeira inserção. Escolha no separador config a escala pretendida...'
+                            message: 'Esta é a sua primeira inserção. Escolha no menu lateral a escala pretendida...'
                         });
                 }
             }
@@ -73021,19 +73814,20 @@ Ext.define('MyApp.view.EscalaNumerica', {
                     {
                         docked: 'top',
                         xtype: 'titlebar',
+                        cls:'titleBar',
                         title: 'Projecto SIMAS',
 
                         items: [
                             {
                                 xtype: 'button',
-                                text: 'Log Off',
                                 itemId: 'logOffButton',
+                                cls:"logoutButton",
                                 align: 'right'
                             },
                             {
                                 xtype: 'button',
-                                text: 'Back',
-                                itemId: 'bckButton',
+                                text: '<',
+                                cls: 'bckButton',
                                 action: 'backView',
                                 align: 'left'
                             }
@@ -73323,18 +74117,18 @@ Ext.define('MyApp.view.EscalaVisual', {
                         docked: 'top',
                         xtype: 'titlebar',
                         title: 'Projecto SIMAS',
-
+                        cls:'titleBar',
                         items: [
                             {
                                 xtype: 'button',
-                                text: 'Log Off',
                                 itemId: 'logOffButton',
+                                cls:"logoutButton",
                                 align: 'right'
                             },
                             {
                                 xtype: 'button',
-                                text: 'Back',
-                                itemId: 'bckButton',
+                                text: '<',
+                                cls: 'bckButton',
                                 action: 'backView',
                                 align: 'left'
                             }
@@ -73439,19 +74233,19 @@ Ext.define('MyApp.view.EscalaSmiles', {
                     {
                         docked: 'top',
                         xtype: 'titlebar',
+                        cls:'titleBar',
                         title: 'Projecto SIMAS',
-
                         items: [
                             {
                                 xtype: 'button',
-                                text: 'Log Off',
                                 itemId: 'logOffButton',
-                                align: 'right'
+                                align: 'right',
+                                cls:"logoutButton"
                             },
                             {
                                 xtype: 'button',
-                                text: 'Back',
-                                itemId: 'bckButton',
+                                text: '<',
+                                cls: 'bckButton',
                                 action: 'backView',
                                 align: 'left'
                             }
@@ -73581,14 +74375,6 @@ Ext.define('MyApp.view.EscalaSmiles', {
                         }
                     }
                 ]
-            },
-            {
-                title: 'Config',
-                iconCls: 'settings'
-            },
-            {
-                title: 'About',
-                iconCls: 'user'
             }
         ],
         control: {
@@ -73638,7 +74424,7 @@ var audioInput = null;
 var sampleRate = 44100;
 var audioContext = null;
 var context = null;
-var outputElement = document.getElementById('ext-element-347');
+var outputElement = document.getElementById('titleBarScaleVerbal');
 var outputString;
 
 function interleave(leftChannel, rightChannel){
@@ -73714,7 +74500,7 @@ function success(e){
     // reset the buffers for the new recording
     leftchannel.length = rightchannel.length = 0;
     recordingLength = 0;
-    document.getElementById('ext-element-347').innerHTML = 'A gravar... Carregue "S" para parar...';
+    document.getElementById('titleBarScaleVerbal').innerHTML = 'A gravar... Carregue "S" para parar...';
 //                document.getElementById("ext-element-332").innerHTML = 'Parar';
 //    document.getElementById("ext-element-330").style.visibility = 'hidden';
 }
@@ -73735,19 +74521,19 @@ Ext.define('MyApp.view.EscalaVerbal', {
                     {
                         docked: 'top',
                         xtype: 'titlebar',
+                        cls:'titleBar',
                         title: 'Projecto SIMAS',
-
                         items: [
                             {
                                 xtype: 'button',
-                                text: 'Log Off',
                                 itemId: 'logOffButton',
-                                align: 'right'
+                                align: 'right',
+                                cls:"logoutButton"
                             },
                             {
                                 xtype: 'button',
-                                text: 'Back',
-                                itemId: 'bckButton',
+                                text: '<',
+                                cls: 'bckButton',
                                 action: 'backView',
                                 align: 'left'
                             }
@@ -73768,6 +74554,7 @@ Ext.define('MyApp.view.EscalaVerbal', {
                     {
                         docked: 'top',
                         xtype: 'titlebar',
+                        id:'titleBarScaleVerbal',
                         title: 'Escala Verbal'
                     },
                     {
@@ -73893,7 +74680,7 @@ Ext.define('MyApp.view.EscalaVerbal', {
                     // we stop recording
                     recording = false;
 
-                    outputElement.innerHTML = 'A criar o ficheiro wav ...';
+//                    outputElement.innerHTML = 'A criar o ficheiro wav ...';
 
                     // we flat the left and right channels down
                     var leftBuffer = mergeBuffers ( leftchannel, recordingLength );
@@ -73940,7 +74727,7 @@ Ext.define('MyApp.view.EscalaVerbal', {
                     var mimeType = 'audio/wav';
 
                     // let's save it
-                    outputElement.innerHTML = 'A gravar o ficheiro...';
+//                    outputElement.innerHTML = 'A gravar o ficheiro...';
                     var url = (window.URL || window.webkitURL).createObjectURL(blob);
 
                     me.fireEvent('onSubmitCommand', me, url, userID,mimeType);
@@ -73958,13 +74745,378 @@ Ext.define('MyApp.view.EscalaVerbal', {
     }
 });
 
+// https://github.com/tomalex0/senchatouch-complex-dataitem
+
+var userID = 0;
+
+Ext.define('MyApp.view.DoctorAdmin', {
+    extend:  Ext.form.Panel ,
+    alias: 'widget.doctorAdmin',
+                                                                                                     
+    config: {
+        tabBarPosition: 'bottom',
+        items: [
+            {
+                title: 'Home',
+                iconCls: 'home',
+                layout: 'fit',
+                styleHtmlContent: true,
+                scrollable: true,
+                items: [
+                    {
+                        docked: 'top',
+                        xtype: 'titlebar',
+                        cls:'titleBar',
+                        title: 'Listagem de utentes/escalas',
+
+                        items: [
+                            {
+                                xtype: 'button',
+                                itemId: 'logOffButton',
+                                cls:"logoutButton",
+                                align: 'right'
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                xtype: 'dataview',
+                store: {
+                    autoLoad: true,
+                    fields: ['id', 'name', 'tablename'],
+                    proxy: {
+                        type: 'jsonp',
+                        url: 'http://www.antonio-ramos.com/sencha/php/getUserDoctor.php?doctorID=' + localStorage.getItem("userID"),
+                        reader: {
+                            type: 'json',
+                            rootProperty: 'data'
+                        }
+                    }
+                },
+                height: 272,
+                itemTpl:'<tpl for="."><div class="logentry" data-userID="{id}" style="width: 100%"><span style="display:block;width:50%;float:left;text-align: left">{name}</span><span style="display:block;width:50%;float:right;text-align: right">{tablename}</span></div></tpl>',
+                itemSelector: 'div.logentry',
+                trackOver: true,
+                listeners: {
+                    'select': function(view, record, item, idx, event, opts) {
+
+                        userID = record.data.id;
+
+                        Ext.Viewport.setActiveItem(Ext.Viewport.down('adminSelectScales'));
+                        history.pushState(null, "");
+
+                    }
+                }
+            }
+
+        ],
+        control: {
+            'div.logentry':{
+                tap: 'teste'
+            }
+        },
+        listeners: [
+            {
+                delegate: '#logOffButton',
+                event: 'tap',
+                fn: 'onLogOffButtonTap'
+            }
+        ]
+    }, teste: function () {
+        alert('you clicked the x icon');
+    },
+    onLogOffButtonTap: function () {
+        this.fireEvent('onSignOffCommand');
+    }
+});
+
+
+Ext.define('MyApp.view.AdminSelScales', {
+    extend:  Ext.form.Panel ,
+    alias: 'widget.adminSelectScales',
+                                                                                                                     
+    config: {
+        layout: 'card',
+        items: [
+            {
+                title: 'Home',
+                iconCls: 'home',
+                styleHtmlContent: true,
+                scrollable: true,
+                id:'adminSelScales',
+                items: [
+                    {
+                        docked: 'top',
+                        xtype: 'titlebar',
+                        cls:'titleBar',
+                        title: 'Escolha da escala por utente',
+                        items: [
+                            {
+                                xtype: 'button',
+                                itemId: 'logOffButton',
+                                cls:"logoutButton",
+                                align: 'right'
+                            },
+                            {
+                                xtype: 'button',
+                                text: '<',
+                                cls: 'bckButton',
+                                action: 'backView',
+                                align: 'left'
+                            }
+                        ]
+                    },
+                    {
+                        xtype: 'button',
+                        ui: 'normal',
+                        id: 'choosenNumeric',
+//                        text: 'Escala Numerica',
+                        action: 'chooseNumeric'
+                    },
+                    {
+                        xtype: 'button',
+                        ui: 'normal',
+                        id: 'choosenAnalogic',
+//                        text: 'Escala Visual Analogica',
+                        action: 'chooseAnalogic'
+                    },
+                    {
+                        xtype: 'button',
+                        ui: 'normal',
+                        id: 'choosenVerbal',
+//                        text: 'Escala Verbal',
+                        action: 'chooseVerbal'
+                    },
+                    {
+                        xtype: 'button',
+                        ui: 'normal',
+                        id: 'choosenSmiles',
+//                        text: 'Escala de Smiles',
+                        action: 'chooseSmiles'
+                    }
+                ]
+            }
+        ],
+        control: {
+            'button[action=backView]': {
+                tap: 'backButtonHandler'
+            },
+            'button[action=chooseNumeric]': {
+                tap: 'backButtonHandler2'
+            },
+            'button[action=chooseAnalogic]': {
+                tap: 'backButtonHandler2'
+            },
+            'button[action=chooseVerbal]': {
+                tap: 'backButtonHandler2'
+            },
+            'button[action=chooseSmiles]': {
+                tap: 'backButtonHandler2'
+            }
+        },
+        listeners: [
+            {
+                delegate: '#logOffButton',
+                event: 'tap',
+                fn: 'onLogOffButtonTap'
+            }
+        ]
+    },
+    backButtonHandler: function () {
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('doctorAdmin'));
+        history.pushState(null, "");
+    },
+    backButtonHandler2: function (element) {
+//        alert(userID);
+        var tableName = "";
+
+        switch (element.id) {
+            case "choosenNumeric":
+                tableName = "tablenumeric";
+                break;
+            case "choosenAnalogic":
+                tableName = "tablevisual";
+                break;
+            case "choosenVerbal":
+                tableName = "tableverbal";
+                break;
+            case "choosenSmiles":
+                tableName = "tablesmiles";
+                break;
+            default :
+                break
+        }
+
+        // TODO passar para o controlador
+        if (tableName != "") {
+            Ext.Ajax.request({
+                url: 'http://www.antonio-ramos.com/sencha/php/updateTableName.php',
+                useDefaultXhrHeader: false,
+                method: 'post',
+                params: {
+                    userID: userID,
+                    table: tableName
+                },
+                success: function (response) {
+
+                    var loginResponse = Ext.JSON.decode(response.responseText);
+
+                    if (loginResponse) {
+                        /*Ext.device.Notification.show({
+                         title: 'Informação',
+                         buttons: Ext.MessageBox.OK,
+                         message: 'A sua escala foi inserida com sucesso'
+                         });*/
+                        Ext.Msg.alert('Informação', 'A escala do utente foi alterada com sucesso');
+//                    Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
+                    } else {
+                        /*Ext.device.Notification.show({
+                         title: 'Informação',
+                         buttons: Ext.MessageBox.OK,
+                         message: 'Houve um erro ao inserir a sua escala'
+                         });*/
+                        Ext.Msg.alert('Informação', 'Houve um erro ao alterar a escala');
+                    }
+                },
+                failure: function (response, opts) {
+                    /* Ext.device.Notification.show({
+                     title: 'Informação',
+                     buttons: Ext.MessageBox.OK,
+                     message: 'server-side failure with status code'+ response.status
+                     });*/
+                    Ext.Msg.alert('Informação', 'server-side failure with status code' + response.status);
+                }
+            });
+        }
+
+
+    },
+    onLogOffButtonTap: function () {
+        this.fireEvent('onSignOffCommand');
+    }
+});
+
+Ext.define('MyApp.view.Login', {
+    extend:  Ext.form.Panel ,
+    alias: "widget.loginView",
+    id:'loginViewID',
+                                                                                                                                
+    config: {
+        title: 'Login',
+        items: [
+            {
+                xtype: 'image',
+                src: 'resources/images/simasLogo.png',
+                cls:'logo'
+            },
+            {
+                xtype: 'fieldset',
+                items: [
+                    {
+                        xtype: 'textfield',
+                        placeHolder: 'Username',
+                        id: 'userNameTextField',
+                        clearIcon : false,
+                        name: 'userNameTextField',
+                        required: true
+                    },
+                    {
+                        xtype: 'passwordfield',
+                        placeHolder: 'Password',
+                        id: 'passwordTextField',
+                        clearIcon : false,
+                        name: 'passwordTextField',
+                        required: true
+                    }
+                ]
+            },
+            {
+                xtype: 'label',
+                html: 'Login failed. Please enter the correct credentials.',
+                id: 'signInFailedLabel',
+                hidden: true,
+                hideAnimation: 'fadeOut',
+                showAnimation: 'fadeIn',
+                style: 'color:#990000;margin:5px 0px;'
+            },
+            {
+                xtype: 'button',
+                id: 'logInButton',
+                ui: 'action',
+                padding: '10px',
+                text: 'Log In',
+                handler: function (element) {
+
+                    var me = element,
+                        usernameField = Ext.getCmp('userNameTextField'),
+                        passwordField = Ext.getCmp('passwordTextField'),
+                        label = Ext.getCmp('signInFailedLabel'),
+                        username = usernameField.getValue(),
+                        password = passwordField.getValue();
+
+                    label.hide();
+
+                    // Using a delayed task in order to give the hide animation above
+                    // time to finish before executing the next steps.
+                    var task = Ext.create('Ext.util.DelayedTask', function () {
+
+                        label.setHtml('');
+
+                        me.up().fireEvent('signInCommand', me, username, password);
+
+                        usernameField.setValue('');
+                        passwordField.setValue('');
+                    });
+
+                    task.delay(500);
+                }
+            }
+        ],
+        control: {
+            'logInButton': {
+                tap: 'onLogInButtonTap'
+            }
+        }
+    },
+    initialize: function () {
+//        console.log(this.parent);
+        if (localStorage.getItem("loginstatus")) {
+            app.getController('Login').signInSuccess();
+//            console.log("logged in:" + this);
+        } else {
+            /*if (!Ext.device.Connection.isOnline()) {
+                Ext.Msg.alert('You are currently connected via ' + Ext.device.Connection.getType());
+            } else {
+                Ext.Msg.alert('You are not currently connected');
+            }*/
+//            Ext.getCmp('signInFailedLabel').destroy();
+//            console.log("logged out:" + this);
+        }
+
+    },
+    showSignInFailedMessage: function (message) {
+        var label = this.down('#signInFailedLabel');
+        label.setHtml(message);
+        label.show();
+    }
+
+});
+
+// todo http://miamicoder.com/2012/adding-a-login-screen-to-a-sencha-touch-application/
+
 Ext.define('MyApp.controller.Login', {
     extend:  Ext.app.Controller ,
     config: {
         refs: {
             loginView: 'loginView',
             mainMenuView: 'mainMenuView',
-            numericScale:'numericScale'
+            numericScale:'numericScale',
+            smilesScale:'smilesScale',
+            verbalScale:'verbalScale',
+            visualScale:'visualScale',
+            doctorAdmin:'doctorAdmin',
+            adminSelectScales:'adminSelectScales'
         },
         control: {
             loginView: {
@@ -73974,6 +75126,21 @@ Ext.define('MyApp.controller.Login', {
                 onSignOffCommand: 'onSignOffCommand'
             },
             numericScale: {
+                onSignOffCommand: 'onSignOffCommand'
+            },
+            smilesScale:{
+                onSignOffCommand: 'onSignOffCommand'
+            },
+            verbalScale:{
+                onSignOffCommand: 'onSignOffCommand'
+            },
+            visualScale:{
+                onSignOffCommand: 'onSignOffCommand'
+            },
+            doctorAdmin:{
+                onSignOffCommand: 'onSignOffCommand'
+            },
+            adminSelectScales:{
                 onSignOffCommand: 'onSignOffCommand'
             }
         }
@@ -73990,22 +75157,17 @@ Ext.define('MyApp.controller.Login', {
 
     onSignInCommand: function (view, username, password) {
 
-        console.log("chegou");
-
-        console.log('Username: ' + username + '\n' + 'Password: ' + password);
-
         var me = this,
             loginView = me.getLoginView();
 
         if (username.length === 0 || password.length === 0) {
-
-            loginView.showSignInFailedMessage('Please enter your username and password.');
+            loginView.showSignInFailedMessage('Por favor introduza a sua password e/ou o seu email.');
             return;
         }
 
         loginView.setMasked({
             xtype: 'loadmask',
-            message: 'Signing In...'
+            message: 'A entrar...'
         });
 
         Ext.Ajax.request({
@@ -74018,32 +75180,36 @@ Ext.define('MyApp.controller.Login', {
             },
             success: function (response) {
 
-                var loginResponse = Ext.JSON.decode(response.responseText);
-
-                console.log(loginResponse);
+                var loginResponse = Ext.JSON.decode(response.responseText).loginStatus;
 
                 if (loginResponse) {
-//                    me.sessionToken = loginResponse.sessionToken;
-//                    sessionStorage.setItem("loginstatus", true);
-//                    sessionStorage.setItem("username", username);
+                    localStorage.setItem("loginstatus", true);
+                    localStorage.setItem("username", username);
+                    localStorage.setItem("userID", Ext.JSON.decode(response.responseText).userID);
+                    localStorage.setItem("userType", Ext.JSON.decode(response.responseText).userType);
                     me.signInSuccess();
                 } else {
-                    me.signInFailure('Login failed. Please try again later.');
+                    me.signInFailure('Ocorreu uma falha no login. Por favor, tente novamente.');
                 }
             },
-            failure: function (response) {
-                me.signInFailure('Login failed. Please try again later.');
+            failure: function () {
+                me.signInFailure('Ocorreu uma falha no login. Por favor, tente novamente.');
             }
         });
     },
 
     signInSuccess: function () {
-        console.log('Signed in.');
-        var loginView = this.getLoginView();
-        mainMenuView = this.getMainMenuView();
-        loginView.setMasked(false);
+//        var loginView = this.getLoginView();
+//        mainMenuView = this.getMainMenuView();
+//        loginView.setMasked(false);
 
-        Ext.Viewport.animateActiveItem(mainMenuView, this.getSlideLeftTransition());
+        window.location.reload();
+
+//        Ext.Viewport.remove(mainMenuView, true);
+//        Ext.Viewport.add([
+//            {'xtype': 'mainMenuView'}]);
+
+//        Ext.Viewport.animateActiveItem(mainMenuView, this.getSlideLeftTransition());
     },
 
     signInFailure: function (message) {
@@ -74054,12 +75220,19 @@ Ext.define('MyApp.controller.Login', {
 
     onSignOffCommand: function () {
 
-        var me = this;
+      /*  Ext.Viewport.add([
+            {'xtype': 'loginView'}
+        ]);*/
 
-        sessionStorage.removeItem("loginstatus");
-        sessionStorage.removeItem("username");
+//        console.log("logofff");
+        window.location.reload();
 
-        Ext.Viewport.animateActiveItem(this.getLoginView(), this.getSlideRightTransition());
+        localStorage.removeItem("loginstatus");
+        localStorage.removeItem("username");
+        localStorage.removeItem("userID");
+        localStorage.removeItem("userType");
+
+//        Ext.Viewport.animateActiveItem(this.getLoginView(), this.getSlideRightTransition());
     }
 });
 
@@ -74076,9 +75249,16 @@ Ext.define('MyApp.controller.EscalaNumerica', {
         }
     },
 
-    onSubmitCommand: function (view, result, userID) {
+    onSubmitCommand: function (view, result, userID2) {
 
-        var me = this;
+        var me = this,
+            num_userID = 0;
+
+        if(typeof modeAdmin == "undefined"){
+            num_userID = localStorage.getItem("userID");
+        }else{
+            num_userID = userID;
+        }
 
         Ext.Ajax.request({
             url: 'http://www.antonio-ramos.com/sencha/php/createResult.php',
@@ -74086,7 +75266,7 @@ Ext.define('MyApp.controller.EscalaNumerica', {
             method: 'post',
             params: {
                 result: result,
-                userID: userID,
+                userID: num_userID,
                 table: 'tablenumeric'
             },
             success: function (response) {
@@ -74099,7 +75279,7 @@ Ext.define('MyApp.controller.EscalaNumerica', {
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso'
                     });*/
-                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
+                    Ext.Msg.alert('Informação', 'A escala deste utente foi alterada');
 //                    Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
                 } else {
                     /*Ext.device.Notification.show({
@@ -74107,7 +75287,7 @@ Ext.define('MyApp.controller.EscalaNumerica', {
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala'
                     });*/
-                    Ext.Msg.alert('Informação', 'Houve um erro ao inserir a sua escala');
+                    Ext.Msg.alert('Informação', 'Houve um erro ao alterar a escala');
                 }
             },
             failure: function(response, opts) {
@@ -74135,9 +75315,16 @@ Ext.define('MyApp.controller.EscalaVisual', {
         }
     },
 
-    onSubmitCommand: function (view, result, userID) {
+    onSubmitCommand: function (view, result, userID2) {
 
-        var me = this;
+        var me = this,
+            num_userID = 0;
+
+        if(typeof modeAdmin == "undefined"){
+            num_userID = localStorage.getItem("userID");
+        }else{
+            num_userID = userID;
+        }
 
         Ext.Ajax.request({
             url: 'http://www.antonio-ramos.com/sencha/php/createResult.php',
@@ -74145,7 +75332,7 @@ Ext.define('MyApp.controller.EscalaVisual', {
             useDefaultXhrHeader: false,
             params: {
                 result: result,
-                userID: userID,
+                userID: num_userID,
                 table:'tablevisual'
             },
             success: function (response) {
@@ -74186,9 +75373,16 @@ Ext.define('MyApp.controller.EscalaSmiles', {
         }
     },
 
-    onSubmitCommand: function (view, result, userID) {
+    onSubmitCommand: function (view, result, userID2) {
 
-        var me = this;
+        var me = this,
+            num_userID = 0;
+
+        if(typeof modeAdmin == "undefined"){
+            num_userID = localStorage.getItem("userID");
+        }else{
+            num_userID = userID;
+        }
 
         Ext.Ajax.request({
             url: 'http://www.antonio-ramos.com/sencha/php/createResult.php',
@@ -74196,7 +75390,7 @@ Ext.define('MyApp.controller.EscalaSmiles', {
             useDefaultXhrHeader: false,
             params: {
                 result: result,
-                userID: userID,
+                userID: num_userID,
                 table:'tablesmiles'
             },
             success: function (response) {
@@ -74239,9 +75433,16 @@ Ext.define('MyApp.controller.EscalaVerbal', {
         }
     },
 
-    onSubmitCommand: function (view, result, userID,mimeType) {
+    onSubmitCommand: function (view, result, userID2,mimeType) {
 
-        var me = this;
+        var me = this,
+            num_userID;
+
+        if(typeof modeAdmin == "undefined"){
+            num_userID = localStorage.getItem("userID");
+        }else{
+            num_userID = userID;
+        }
 
         Ext.device.Notification.show({
             title: 'One Button',
@@ -74256,7 +75457,7 @@ Ext.define('MyApp.controller.EscalaVerbal', {
             useDefaultXhrHeader: false,
             params: {
                 resultBlob: result,
-                userID: userID,
+                userID: num_userID,
                 table:'tableverbal',
                 mimeType:mimeType
             },
@@ -74284,9 +75485,16 @@ Ext.define('MyApp.controller.EscalaVerbal', {
         });
     },
 
-    onSubmitCommandDevice: function (view, result, userID,mimeType) {
+    onSubmitCommandDevice: function (view, result, userID2,mimeType) {
 
-        var me = this;
+        var me = this,
+            num_userID = 0;
+
+        if(typeof modeAdmin == "undefined"){
+            num_userID = localStorage.getItem("userID");
+        }else{
+            num_userID = userID;
+        }
 
         Ext.Ajax.request({
             url: 'http://www.antonio-ramos.com/sencha/php/createBlob.php',
@@ -74295,7 +75503,7 @@ Ext.define('MyApp.controller.EscalaVerbal', {
             useDefaultXhrHeader: false,
             params: {
                 resultBlob: result,
-                userID: userID,
+                userID: num_userID,
                 table:'tableverbal',
                 mimeType:mimeType
             },
@@ -74326,16 +75534,16 @@ Ext.define('MyApp.controller.EscalaVerbal', {
 });
 
 /*
-    This file is generated and updated by Sencha Cmd. You can edit this file as
-    needed for your application, but these edits will have to be merged by
-    Sencha Cmd when it performs code generation tasks such as generating new
-    models, controllers or views and when running "sencha app upgrade".
+ This file is generated and updated by Sencha Cmd. You can edit this file as
+ needed for your application, but these edits will have to be merged by
+ Sencha Cmd when it performs code generation tasks such as generating new
+ models, controllers or views and when running "sencha app upgrade".
 
-    Ideally changes to this file would be limited and most work would be done
-    in other places (such as Controllers). If Sencha Cmd cannot merge your
-    changes and its generated code, it will produce a "merge conflict" that you
-    will need to resolve manually.
-*/
+ Ideally changes to this file would be limited and most work would be done
+ in other places (such as Controllers). If Sencha Cmd cannot merge your
+ changes and its generated code, it will produce a "merge conflict" that you
+ will need to resolve manually.
+ */
 
 Ext.application({
     name: 'MyApp',
@@ -74346,14 +75554,16 @@ Ext.application({
 
     views: [
         'Login',
+        'DoctorAdmin',
         'Main',
         'EscalaNumerica',
         'EscalaVisual',
         'EscalaSmiles',
-        'EscalaVerbal'
+        'EscalaVerbal',
+        'AdminSelScales'
     ],
 
-    controllers:['Login','EscalaNumerica','EscalaVisual','EscalaSmiles','EscalaVerbal'],
+    controllers: ['Login', 'EscalaNumerica', 'EscalaVisual', 'EscalaSmiles', 'EscalaVerbal'],
 //    controllers:['EscalaNumerica','EscalaVisual','EscalaSmiles','EscalaVerbal'],
 
     icon: {
@@ -74374,26 +75584,43 @@ Ext.application({
         '1496x2048': 'resources/startup/1496x2048.png'
     },
 
-    launch: function() {
+    launch: function () {
         // Destroy the #appLoadingIndicator element
         Ext.fly('appLoadingIndicator').destroy();
 
+        app = this;
+
         // Initialize the main view
-        Ext.Viewport.add([
-            {'xtype': 'loginView'},
-            {'xtype': 'mainMenuView'},
-            {'xtype': 'numericScale'},
-            {'xtype': 'visualScale'},
-            {'xtype': 'smilesScale'},
-            {'xtype': 'verbalScale'}
-        ]);
+        if (localStorage.getItem("loginstatus")) {
+            if (localStorage.getItem("userType") == 'u') {
+                Ext.Viewport.add([
+                    {'xtype': 'mainMenuView'},
+                    {'xtype': 'numericScale'},
+                    {'xtype': 'visualScale'},
+                    {'xtype': 'smilesScale'},
+                    {'xtype': 'verbalScale'}
+                ]);
+            } else if (localStorage.getItem("userType") == 'd') {
+                Ext.Viewport.add([
+                    {'xtype': 'doctorAdmin'},
+                    {'xtype': 'mainMenuView'},
+                    {'xtype': 'adminSelectScales'}
+                ]);
+            }
+        } else {
+            Ext.Viewport.add([
+                {'xtype': 'loginView'},
+            ]);
+        }
+
+
     },
 
-    onUpdated: function() {
+    onUpdated: function () {
         Ext.Msg.confirm(
             "Application Update",
             "This application has just successfully been updated to the latest version. Reload now?",
-            function(buttonId) {
+            function (buttonId) {
                 if (buttonId === 'yes') {
                     window.location.reload();
                 }
