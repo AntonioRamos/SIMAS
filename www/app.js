@@ -73625,6 +73625,9 @@ Ext.define('MyApp.view.Main', {
             'button[action=push-view_4]': {
                 tap: 'pushViewFunction_4'
             },
+            'button[action=push-view_5]': {
+                tap: 'pushViewFunction_5'
+            },
             'button[action=backView]': {
                 tap: 'backButtonHandler'
             }
@@ -73647,10 +73650,11 @@ Ext.define('MyApp.view.Main', {
                 height: '100%',
                 scrollable: false,
                 data: [
-                    {title: 'Escala Numérica', name: 'push-view_1'},
-                    {title: 'Escala Descritiva Verbal', name: 'push-view_2'},
-                    {title: 'Escala Visual Analógica', name: 'push-view_3'},
-                    {title: 'Escala de smiles', name: 'push-view_4'}
+                    {title: 'Escala numérica', name: 'push-view_1'},
+                    {title: 'Escala descritiva verbal', name: 'push-view_2'},
+                    {title: 'Escala visual analógica', name: 'push-view_3'},
+                    {title: 'Escala de smiles', name: 'push-view_4'},
+                    {title: 'Escala de depressão pós-parto', name: 'push-view_5'}
                 ],
                 listeners: {
                     select: function (view, record) {
@@ -73673,6 +73677,11 @@ Ext.define('MyApp.view.Main', {
                             case 'push-view_4':
                                 Ext.Viewport.hideMenu('left');
                                 Ext.Viewport.setActiveItem(Ext.Viewport.down('smilesScale'));
+                                history.pushState(null, "");
+                                break;
+                            case 'push-view_5':
+                                Ext.Viewport.hideMenu('left');
+                                Ext.Viewport.setActiveItem(Ext.Viewport.down('depressionView'));
                                 history.pushState(null, "");
                                 break;
                         }
@@ -73725,6 +73734,10 @@ Ext.define('MyApp.view.Main', {
                         break;
                     case "tableverbal":
                         Ext.Viewport.setActiveItem(Ext.Viewport.down('verbalScale'));
+                        history.pushState(null, "");
+                        break;
+                    case "tabledepression":
+                        Ext.Viewport.setActiveItem(Ext.Viewport.down('depressionView'));
                         history.pushState(null, "");
                         break;
                     default:
@@ -73815,10 +73828,16 @@ Ext.define('MyApp.view.EscalaNumerica', {
             {
                 xtype: 'fieldset',
                 id: 'numericPanel',
-                layout: {
-                    type: 'hbox'
-//                    type:'vbox'
+                layout: window.orientation == 'landscape' ? {
+                    type: 'vbox',
+                    pack: 'center'
+                } : {
+                    type: 'hbox',
+                    pack: 'center'
                 },
+                /*layout: {
+                    type: 'hbox'
+                },*/
                 items: [
                    {
                         xtype: 'label',
@@ -73831,7 +73850,8 @@ Ext.define('MyApp.view.EscalaNumerica', {
                         label: '0',
                         value: '0',
                         cls: 'radioNumeric',
-                        labelAlign: 'bottom',
+//                        labelAlign: 'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'left' : 'bottom',
                         style: 'text-align:right',
                         listeners: {
                             check: function (ctl) {
@@ -73855,7 +73875,8 @@ Ext.define('MyApp.view.EscalaNumerica', {
                         label: '1',
                         value: '1',
                         cls: 'radioNumeric',
-                        labelAlign: 'bottom',
+//                        labelAlign: 'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'left' : 'bottom',
                         style: 'text-align:right',
                         listeners: {
                             check: function (ctl) {
@@ -73879,7 +73900,8 @@ Ext.define('MyApp.view.EscalaNumerica', {
                         label: '2',
                         value: '2',
                         cls: 'radioNumeric',
-                        labelAlign: 'bottom',
+//                        labelAlign: 'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'left' : 'bottom',
                         style: 'text-align:right',
                         listeners: {
                             check: function (ctl) {
@@ -73902,7 +73924,8 @@ Ext.define('MyApp.view.EscalaNumerica', {
                         name: 'numericValue',
                         label: '3',
                         value: '3',
-                        labelAlign: 'bottom',
+//                        labelAlign: 'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'left' : 'bottom',
                         cls: 'radioNumeric',
                         style: 'text-align:right',
                         listeners: {
@@ -73927,7 +73950,8 @@ Ext.define('MyApp.view.EscalaNumerica', {
                         label: '4',
                         value: '4',
                         cls: 'radioNumeric',
-                        labelAlign: 'bottom',
+//                        labelAlign: 'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'left' : 'bottom',
                         style: 'text-align:right',
                         listeners: {
                             check: function (ctl) {
@@ -73951,7 +73975,8 @@ Ext.define('MyApp.view.EscalaNumerica', {
                         label: '5',
                         value: '5',
                         cls: 'radioNumeric',
-                        labelAlign: 'bottom',
+//                        labelAlign: 'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'left' : 'bottom',
                         style: 'text-align:right',
                         listeners: {
                             check: function (ctl) {
@@ -73975,7 +74000,8 @@ Ext.define('MyApp.view.EscalaNumerica', {
                         label: '6',
                         value: '6',
                         cls: 'radioNumeric',
-                        labelAlign: 'bottom',
+//                        labelAlign: 'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'left' : 'bottom',
                         style: 'text-align:right',
                         listeners: {
                             check: function (ctl) {
@@ -73999,7 +74025,8 @@ Ext.define('MyApp.view.EscalaNumerica', {
                         label: '7',
                         value: '7',
                         cls: 'radioNumeric',
-                        labelAlign: 'bottom',
+//                        labelAlign: 'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'left' : 'bottom',
                         style: 'text-align:right',
                         listeners: {
                             check: function (ctl) {
@@ -74022,7 +74049,8 @@ Ext.define('MyApp.view.EscalaNumerica', {
                         name: 'numericValue',
                         label: '8',
                         value: '8',
-                        labelAlign: 'bottom',
+//                        labelAlign: 'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'left' : 'bottom',
                         cls: 'radioNumeric',
                         style: 'text-align:right',
                         listeners: {
@@ -74046,7 +74074,8 @@ Ext.define('MyApp.view.EscalaNumerica', {
                         name: 'numericValue',
                         label: '9',
                         value: '9',
-                        labelAlign: 'bottom',
+//                        labelAlign: 'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'left' : 'bottom',
                         cls: 'radioNumeric',
                         style: 'text-align:right',
                         listeners: {
@@ -74071,7 +74100,8 @@ Ext.define('MyApp.view.EscalaNumerica', {
                         label: '10',
                         value: '10',
                         cls: 'radioNumeric',
-                        labelAlign: 'bottom',
+//                        labelAlign: 'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'left' : 'bottom',
                         style: 'text-align:right',
                         listeners: {
                             check: function (ctl) {
@@ -74227,7 +74257,7 @@ Ext.define('MyApp.view.EscalaVisual', {
 Ext.define('MyApp.view.EscalaSmiles', {
     extend:  Ext.form.Panel ,
     alias: 'widget.smilesScale',
-                                                                 
+                                                                                                                    
     config: {
         tabBarPosition: 'bottom',
         items: [
@@ -74268,16 +74298,24 @@ Ext.define('MyApp.view.EscalaSmiles', {
             {
                 xtype: 'fieldset',
                 id:'panelSmiles',
-                layout:{
-                    type:'hbox'
+                layout: window.orientation == 'landscape' ? {
+                    type: 'vbox',
+                    pack: 'center'
+                } : {
+                    type: 'hbox',
+                    pack: 'center'
                 },
+                /*layout:{
+                    type:'hbox'
+                },*/
                 items: [
                     {
                         xtype: 'radiofield',
                         name: 'test',
                         label: '0',
                         value:'0',
-                        labelAlign:'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'right' : 'bottom',
+//                        labelAlign:'bottom',
                         cls:'smile0',
                         listeners: {
                             check: function (ctl) {
@@ -74300,7 +74338,8 @@ Ext.define('MyApp.view.EscalaSmiles', {
                         label: '2',
                         value:'2',
                         cls:'smile2',
-                        labelAlign:'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'right' : 'bottom',
+//                        labelAlign:'bottom',
                         listeners: {
                             check: function (ctl) {
 
@@ -74322,7 +74361,8 @@ Ext.define('MyApp.view.EscalaSmiles', {
                         name: 'test',
                         label: '4',
                         value:'4',
-                        labelAlign:'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'right' : 'bottom',
+//                        labelAlign:'bottom',
                         cls:'smile4',
                         listeners: {
                             check: function (ctl) {
@@ -74345,7 +74385,8 @@ Ext.define('MyApp.view.EscalaSmiles', {
                         name: 'test',
                         label: '6',
                         value:'6',
-                        labelAlign:'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'right' : 'bottom',
+//                        labelAlign:'bottom',
                         cls:'smile6',
                         listeners: {
                             check: function (ctl) {
@@ -74368,7 +74409,8 @@ Ext.define('MyApp.view.EscalaSmiles', {
                         name: 'test',
                         label: '8',
                         value:'8',
-                        labelAlign:'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'right' : 'bottom',
+//                        labelAlign:'bottom',
                         cls:'smile8',
                         listeners: {
                             check: function (ctl) {
@@ -74391,7 +74433,8 @@ Ext.define('MyApp.view.EscalaSmiles', {
                         name: 'test',
                         label: '10',
                         value:'10',
-                        labelAlign:'bottom',
+                        labelAlign: window.orientation == 'landscape' ? 'right' : 'bottom',
+//                        labelAlign:'bottom',
                         cls:'smile10',
                         listeners: {
                             check: function (ctl) {
@@ -74429,6 +74472,16 @@ Ext.define('MyApp.view.EscalaSmiles', {
                 fn: 'onSubmitCommandTap'
             }
         ]
+    },
+    initialize: function () {
+        // Add a Listener. Listen for [Viewport ~ Orientation] Change.
+        Ext.Viewport.on('orientationchange', 'handleOrientationChange', this, {buffer: 50 });
+        this.callParent(arguments);
+    },
+    handleOrientationChange: function(viewport, orientation, width, height){
+        console.log('rpc.view.home.indexView ~ handleOrientationChange');
+        // Execute the code that needs to fire on Orientation Change.
+//        alert('o:' + orientation + ' w:' + width + ' h:' + height);
     },
     backButtonHandler: function () {
         Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
@@ -74770,6 +74823,542 @@ Ext.define('MyApp.view.EscalaVerbal', {
     }
 });
 
+Ext.define('MyApp.view.EscalaDepressao', {
+    extend:  Ext.form.Panel ,
+    alias: 'widget.depressionView',
+                                                                                                                     
+    id: 'depressionViewID',
+    config: {
+        tabBarPosition: 'bottom',
+        items: [
+            {
+                title: 'Home',
+                iconCls: 'home',
+                styleHtmlContent: true,
+                scrollable: true,
+                items: [
+                    {
+                        docked: 'top',
+                        xtype: 'titlebar',
+                        cls: 'titleBar',
+                        title: 'Escala de Depressão Pós-parto',
+                        items: [
+                            {
+                                xtype: 'button',
+                                itemId: 'logOffButton',
+                                cls: "logoutButton",
+                                align: 'right'
+                            },
+                            {
+                                xtype: 'button',
+                                cls: 'bckButton',
+                                action: 'backView',
+                                align: 'left'
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                xtype: 'fieldset',
+                id: 'depressionPanel',
+                layout: {
+                    type: 'vbox'
+//                    type:'vbox'
+                },
+                items: [
+                    {
+                        xtype: 'label',
+                        html: '<br />Dado que teve um bebé há pouco tempo, gostaríamos de saber como se sente.<br />' +
+                            'Por favor, seleccione a resposta que mais se aproxima dos seus sentimentos nos últimos 7 dias.<br />' +
+                            'Obrigado.<br/><br/>',
+                        cls: 'infoLabel'
+                    },
+                    {
+                        xtype: 'textfield',
+                        name: 'childAge',
+                        id: 'childAgeID',
+                        label: 'Idade do Bebé:',
+                        cls: 'chilAge',
+                        clearIcon: false,
+                        required: true,
+                        labelAlign: 'top'
+                    },
+                    {
+                        xtype: 'label',
+                        html: '<br /><b>Nos últimos 7 dias:</b><br/><br/><b>1.</b>Tenho sido capaz de me rir e ver o lado divertido das coisas',
+                        cls: 'questionLabel'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question1',
+                        value: '0',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Tanto como dantes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question1',
+                        value: '1',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Menos do que antes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question1',
+                        value: '2',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Muito menos do que antes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question1',
+                        value: '3',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Nunca'
+                    },
+                    {
+                        xtype: 'label',
+                        html: '<br /><b>2.</b>Tenho tido esperança no futuro.',
+                        cls: 'questionLabel'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question2',
+                        value: '0',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Tanta como sempre tive'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question2',
+                        value: '1',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: ' Menos do que costumava ter'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question2',
+                        value: '2',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: ' Muito menos do que costumava ter'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question2',
+                        value: '3',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Quase nenhuma'
+                    },
+                    {
+                        xtype: 'label',
+                        html: '<br /><b>3.</b>Tenho-me culpado sem necessidade quando as coisas correm mal.',
+                        cls: 'questionLabel'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question3',
+                        value: '3',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, a maioria das vezes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question3',
+                        value: '2',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, algumas vezes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question3',
+                        value: '1',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: ' Raramente'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question3',
+                        value: '0',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Não, nunca'
+                    },
+                    {
+                        xtype: 'label',
+                        html: '<br /><b>4.</b>Tenho estado ansiosa ou preocupada sem motivo.',
+                        cls: 'questionLabel'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question4',
+                        value: '0',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Não, nunca'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question4',
+                        value: '1',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Quase nunca'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question4',
+                        value: '2',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, por vezes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question4',
+                        value: '3',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, muitas vezes'
+                    },
+                    {
+                        xtype: 'label',
+                        html: '<br /><b>5.</b>Tenho-me sentido com medo ou muito assustada, sem motivo.',
+                        cls: 'questionLabel'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question5',
+                        value: '3',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, muitas vezes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question5',
+                        value: '2',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, por vezes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question5',
+                        value: '1',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Não, raramente'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question5',
+                        value: '0',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Não, nunca'
+                    },
+                    {
+                        xtype: 'label',
+                        html: '<br /><b>6.</b>Tenho sentido que são coisas demais para mim.',
+                        cls: 'questionLabel'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question6',
+                        value: '3',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, a maioria das vezes não consigo resolvê-las'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question6',
+                        value: '2',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, por vezes não tenho conseguido resolvê-las como antes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question6',
+                        value: '1',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Não, a maioria das vezes resolvo-as facilmente'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question6',
+                        value: '0',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Não, resolvo-as tão bem como antes'
+                    },
+                    {
+                        xtype: 'label',
+                        html: '<br /><b>7.</b>Tenho-me sentido tão infeliz que durmo mal.',
+                        cls: 'questionLabel'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question7',
+                        value: '3',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, quase sempre'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question7',
+                        value: '2',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, por vezes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question7',
+                        value: '1',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Raramente'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question7',
+                        value: '0',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Não, nunca'
+                    },
+                    {
+                        xtype: 'label',
+                        html: '<br /><b>8.</b>Tenho-me sentido triste ou muito infeliz.',
+                        cls: 'questionLabel'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question8',
+                        value: '3',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, quase sempre'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question8',
+                        value: '2',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, muitas vezes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question8',
+                        value: '1',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Raramente'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question8',
+                        value: '0',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Não, nunca'
+                    },
+                    {
+                        xtype: 'label',
+                        html: '<br /><b>9.</b>Tenho-me sentido tão infeliz que choro.',
+                        cls: 'questionLabel'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question9',
+                        value: '3',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, quase sempre'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question9',
+                        value: '2',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, muitas vezes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question9',
+                        value: '1',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Só às vezes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question9',
+                        value: '0',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Não, nunca'
+                    },
+                    {
+                        xtype: 'label',
+                        html: '<br /><b>10.</b>Tive ideias de fazer mal a mim mesma.',
+                        cls: 'questionLabel'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question10',
+                        value: '3',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Sim, muitas vezes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question10',
+                        value: '2',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Por vezes'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question10',
+                        value: '1',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Muito raramente'
+                    },
+                    {
+                        xtype: 'radiofield',
+                        name: 'question10',
+                        value: '0',
+                        cls: 'questionRadio',
+                        labelAlign: 'left',
+                        label: 'Nunca'
+                    }
+                ]
+            },
+            {
+                xtype: 'button',
+                id: 'depressionButton',
+                ui: 'action',
+                text: 'Submeter',
+                style: 'margin-top:20px;',
+                handler: function (element) {
+
+                    var result = 0,
+                        bol_submit = true,
+                        getChildAge = Ext.getCmp("childAgeID").getValue(),
+                        bol_childAgeFilled = true;
+
+                    for (var i = 1; i < 11; i++) {
+
+                        var querySelectorID = "radiofield[name=question" + i + "]",
+                            resultQuery = Ext.ComponentQuery.query(querySelectorID)[0].getGroupValue();
+
+                        if (parseInt(resultQuery) >= 0 && parseInt(resultQuery) <= 3) {
+                            result = result + parseInt(Ext.ComponentQuery.query(querySelectorID)[0].getGroupValue());
+                        } else {
+                            bol_submit = false;
+                            break;
+                        }
+
+                    }
+
+                    if (getChildAge == "") {
+                        bol_childAgeFilled = false;
+                    }
+
+                    if (bol_submit && bol_childAgeFilled) {
+
+                        var me = this,
+                            userID = 1;
+
+
+                        Ext.Viewport.setMasked({
+                            xtype: 'loadmask',
+                            message: 'A inserir...'
+                        });
+
+                        element.up('panel').fireEvent('onSubmitCommand', me, result, userID,getChildAge);
+
+//                    var me = element,
+//                        question10 = Ext.getCmp('question10'),
+//                        question9 = Ext.getCmp('question9'),
+//                        question10Value = question10.getValue(),
+//                        question9Value = question9.getValue();
+//
+//
+//                    console.log(question10Value);
+
+                        /* var task = Ext.create('Ext.util.DelayedTask', function () {
+                         label.setHtml('');
+                         me.up().fireEvent('signInCommand', me, username, password);
+                         usernameField.setValue('');
+                         passwordField.setValue('');
+                         });*/
+                    } else {
+                        var str_message = "";
+
+                        if(!bol_childAgeFilled && !bol_submit){
+                            str_message = 'Por favor, responda a todas as perguntas e preencha a idade da criança';
+//                            str_message = 'Por favor, preencha a idade da criança';
+                        }else if(!bol_submit){
+                            str_message = 'Por favor, responda a todas as perguntas';
+                        }else{
+                            str_message = 'Por favor, preencha a idade da criança';
+                        }
+
+                        Ext.device.Notification.show({
+                            title: 'Erro',
+                            buttons: Ext.MessageBox.OK,
+                            message: str_message
+                        });
+                    }
+
+                }
+            }
+        ],
+        control: {
+            'button[action=backView]': {
+                tap: 'backButtonHandler'
+            }
+        },
+        listeners: [
+            {
+                delegate: '#logOffButton',
+                event: 'tap',
+                fn: 'onLogOffButtonTap'
+            }
+        ]
+    },
+    backButtonHandler: function () {
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        history.pushState(null, "");
+    },
+    onLogOffButtonTap: function () {
+        this.fireEvent('onSignOffCommand');
+    }
+});
+
 // https://github.com/tomalex0/senchatouch-complex-dataitem
 
 var userID = 0;
@@ -74792,7 +75381,7 @@ Ext.define('MyApp.view.DoctorAdmin', {
                         docked: 'top',
                         xtype: 'titlebar',
                         cls:'titleBar',
-                        title: 'Listagem de utentes/escalas',
+                        title: 'Listagem utente/escala',
 
                         items: [
                             {
@@ -74909,6 +75498,12 @@ Ext.define('MyApp.view.AdminSelScales', {
                         ui: 'normal',
                         id: 'choosenSmiles',
                         action: 'chooseSmiles'
+                    },
+                    {
+                        xtype: 'button',
+                        ui: 'normal',
+                        id: 'choosenDepression',
+                        action: 'chooseDepression'
                     }
                 ]
             }
@@ -74918,16 +75513,19 @@ Ext.define('MyApp.view.AdminSelScales', {
                 tap: 'backButtonHandler'
             },
             'button[action=chooseNumeric]': {
-                tap: 'backButtonHandler2'
+                tap: 'overwriteScale'
             },
             'button[action=chooseAnalogic]': {
-                tap: 'backButtonHandler2'
+                tap: 'overwriteScale'
             },
             'button[action=chooseVerbal]': {
-                tap: 'backButtonHandler2'
+                tap: 'overwriteScale'
             },
             'button[action=chooseSmiles]': {
-                tap: 'backButtonHandler2'
+                tap: 'overwriteScale'
+            },
+            'button[action=chooseDepression]': {
+                tap: 'overwriteScale'
             }
         },
         listeners: [
@@ -74943,7 +75541,7 @@ Ext.define('MyApp.view.AdminSelScales', {
         Ext.Viewport.setActiveItem(Ext.Viewport.down('doctorAdmin'));
         history.pushState(null, "");
     },
-    backButtonHandler2: function (element) {
+    overwriteScale: function (element) {
         var tableName = "";
 
         Ext.Viewport.setMasked({
@@ -74963,6 +75561,9 @@ Ext.define('MyApp.view.AdminSelScales', {
                 break;
             case "choosenSmiles":
                 tableName = "tablesmiles";
+                break;
+            case "choosenDepression":
+                tableName = "tabledepression";
                 break;
             default :
                 break
@@ -75139,7 +75740,8 @@ Ext.define('MyApp.controller.Login', {
             verbalScale:'verbalScale',
             visualScale:'visualScale',
             doctorAdmin:'doctorAdmin',
-            adminSelectScales:'adminSelectScales'
+            adminSelectScales:'adminSelectScales',
+            depressionView:'depressionView'
         },
         control: {
             loginView: {
@@ -75164,6 +75766,9 @@ Ext.define('MyApp.controller.Login', {
                 onSignOffCommand: 'onSignOffCommand'
             },
             adminSelectScales:{
+                onSignOffCommand: 'onSignOffCommand'
+            },
+            depressionView:{
                 onSignOffCommand: 'onSignOffCommand'
             }
         }
@@ -75579,6 +76184,77 @@ Ext.define('MyApp.controller.EscalaVerbal', {
     }
 });
 
+Ext.define('MyApp.controller.EscalaDepressao', {
+    extend:  Ext.app.Controller ,
+    config: {
+        refs: {
+            depressionView: 'depressionView'
+        },
+        control: {
+            depressionView: {
+                onSubmitCommand: 'onSubmitCommand'
+            }
+        }
+    },
+
+    onSubmitCommand: function (view, result, userID2,childAge) {
+
+        var me = this,
+            num_userID = 0;
+
+        if(typeof modeAdmin == "undefined"){
+            num_userID = localStorage.getItem("userID");
+        }else{
+            num_userID = userID;
+        }
+
+        Ext.Ajax.request({
+            url: 'http://www.antonio-ramos.com/sencha/php/createResultEPDS.php',
+            useDefaultXhrHeader: false,
+            method: 'post',
+            params: {
+                result: result,
+                userID: num_userID,
+                table: 'tabledepression',
+                childAge: childAge
+            },
+            success: function (response) {
+
+                var loginResponse = Ext.JSON.decode(response.responseText);
+
+                if (loginResponse) {
+                   Ext.device.Notification.show({
+                        title: 'Informação',
+                        buttons: Ext.MessageBox.OK,
+                        message: 'A sua escala foi inserida com sucesso'
+                    });
+//                    Ext.Msg.alert('Informação', 'A escala deste utente foi alterada');
+//                    Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
+                } else {
+                    Ext.device.Notification.show({
+                        title: 'Erro',
+                        buttons: Ext.MessageBox.OK,
+                        message: 'Houve um erro ao inserir a sua escala'
+                    });
+//                    Ext.Msg.alert('Informação', 'Houve um erro ao alterar a escala');
+                }
+                Ext.Viewport.setMasked(false);
+            },
+            failure: function(response, opts) {
+
+                Ext.Viewport.setMasked(false);
+
+                Ext.device.Notification.show({
+                    title: 'Erro',
+                    buttons: Ext.MessageBox.OK,
+                    message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
+                });
+//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
+            }
+        });
+    }
+});
+
 /*
  This file is generated and updated by Sencha Cmd. You can edit this file as
  needed for your application, but these edits will have to be merged by
@@ -75609,10 +76285,11 @@ Ext.application({
         'EscalaVisual',
         'EscalaSmiles',
         'EscalaVerbal',
-        'AdminSelScales'
+        'AdminSelScales',
+        'EscalaDepressao'
     ],
 
-    controllers: ['Login', 'EscalaNumerica', 'EscalaVisual', 'EscalaSmiles', 'EscalaVerbal'],
+    controllers: ['Login', 'EscalaNumerica', 'EscalaVisual', 'EscalaSmiles', 'EscalaVerbal', 'EscalaDepressao'],
 //    controllers:['EscalaNumerica','EscalaVisual','EscalaSmiles','EscalaVerbal'],
 
     icon: {
@@ -75647,7 +76324,8 @@ Ext.application({
                     {'xtype': 'numericScale'},
                     {'xtype': 'visualScale'},
                     {'xtype': 'smilesScale'},
-                    {'xtype': 'verbalScale'}
+                    {'xtype': 'verbalScale'},
+                    {'xtype': 'depressionView'}
                 ]);
             } else if (localStorage.getItem("userType") == 'd') {
                 Ext.Viewport.add([
