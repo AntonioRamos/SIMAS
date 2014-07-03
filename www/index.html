@@ -2,7 +2,7 @@
 <html manifest="" lang="en-US">
 <head>
     <meta charset="UTF-8">
-    <title>MyApp</title>
+    <title>SIMAS</title>
     <style type="text/css">
          /**
          * Example of an initial loading indicator.
@@ -246,6 +246,16 @@
     <!--<script type="text/javascript" src="app.js"></script>-->
     <script type="text/javascript">
         var app = undefined;
+
+        document.addEventListener("deviceready", onDeviceReady, false);
+
+        function onDeviceReady(){
+            document.addEventListener("backbutton", function(e){
+                    e.preventDefault();
+                    navigator.app.exitApp();
+            }, false);
+        }
+
     </script>
 </head>
 <body>

@@ -73499,7 +73499,7 @@ var userItems = [
                     docked: 'top',
                     xtype: 'titlebar',
                     cls:'titleBar',
-                    title: 'Página Inicial',
+                    title: 'SIMAS',
                     items: [
                         {
                             xtype: 'button',
@@ -73742,7 +73742,6 @@ Ext.define('MyApp.view.Main', {
                         break;
                     default:
                         Ext.device.Notification.show({
-                            title: 'Informação',
                             buttons: Ext.MessageBox.OK,
                             message: 'Esta é a sua primeira inserção. Escolha no menu lateral a escala pretendida...'
                         });
@@ -75585,7 +75584,6 @@ Ext.define('MyApp.view.AdminSelScales', {
 
                     if (loginResponse) {
                         Ext.device.Notification.show({
-                            title: 'Informação',
                             buttons: Ext.MessageBox.OK,
                             message: 'A escala do utente foi alterada com sucesso'
                         });
@@ -75629,6 +75627,7 @@ Ext.define('MyApp.view.Login', {
                                                                                                                                                  
     config: {
         title: 'Login',
+        submitOnAction:true,
         items: [
             {
                 xtype: 'image',
@@ -75637,21 +75636,22 @@ Ext.define('MyApp.view.Login', {
             },
             {
                 xtype: 'fieldset',
-                submitOnAction:true,
                 id:'loginFormID',
                 name:'loginForm',
                 items: [
                     {
                         xtype: 'textfield',
-                        placeHolder: 'Username',
+                        placeHolder: 'username',
                         id: 'userNameTextField',
+                        submitOnAction:false,
                         clearIcon : false,
                         name: 'userNameTextField',
                         required: true
                     },
                     {
                         xtype: 'passwordfield',
-                        placeHolder: 'Password',
+                        placeHolder: 'password',
+                        submitOnAction:false,
                         id: 'passwordTextField',
                         clearIcon : false,
                         name: 'passwordTextField',
@@ -75688,8 +75688,8 @@ Ext.define('MyApp.view.Login', {
                     var task = Ext.create('Ext.util.DelayedTask', function () {
                         label.setHtml('');
                         me.up().fireEvent('signInCommand', me, username, password);
-                        usernameField.setValue('');
-                        passwordField.setValue('');
+//                        usernameField.setValue('');
+//                        passwordField.setValue('');
                     });
 
                     task.delay(500);
@@ -75879,7 +75879,6 @@ Ext.define('MyApp.controller.EscalaNumerica', {
 
                 if (loginResponse) {
                    Ext.device.Notification.show({
-                        title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso'
                     });
@@ -75949,7 +75948,6 @@ Ext.define('MyApp.controller.EscalaVisual', {
 
                 if (loginResponse) {
                     Ext.device.Notification.show({
-                        title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso'
                     });
@@ -76020,7 +76018,6 @@ Ext.define('MyApp.controller.EscalaSmiles', {
 
                 if (loginResponse) {
                     Ext.device.Notification.show({
-                        title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso'
                     });
@@ -76095,7 +76092,6 @@ Ext.define('MyApp.controller.EscalaVerbal', {
 
                 if (loginResponse) {
                     Ext.device.Notification.show({
-                        title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso (Desktop)'
                     });
@@ -76152,7 +76148,6 @@ Ext.define('MyApp.controller.EscalaVerbal', {
 
                 if (loginResponse) {
                     Ext.device.Notification.show({
-                        title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso (Device)'
                     });
@@ -76224,7 +76219,6 @@ Ext.define('MyApp.controller.EscalaDepressao', {
 
                 if (loginResponse) {
                    Ext.device.Notification.show({
-                        title: 'Informação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua escala foi inserida com sucesso'
                     });
