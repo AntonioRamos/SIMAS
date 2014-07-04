@@ -67332,6 +67332,1710 @@ Ext.define('Ext.field.Checkbox', {
 });
 
 /**
+ * @private
+ *
+ * A general {@link Ext.picker.Picker} slot class.  Slots are used to organize multiple scrollable slots into
+ * a single {@link Ext.picker.Picker}.
+ *
+ *     {
+ *         name : 'limit_speed',
+ *         title: 'Speed Limit',
+ *         data : [
+ *             {text: '50 KB/s', value: 50},
+ *             {text: '100 KB/s', value: 100},
+ *             {text: '200 KB/s', value: 200},
+ *             {text: '300 KB/s', value: 300}
+ *         ]
+ *     }
+ *
+ * See the {@link Ext.picker.Picker} documentation on how to use slots.
+ */
+Ext.define('Ext.picker.Slot', {
+    extend:  Ext.dataview.DataView ,
+    xtype : 'pickerslot',
+    alternateClassName: 'Ext.Picker.Slot',
+               
+                        
+                         
+                        
+                               
+      
+
+    /**
+     * @event slotpick
+     * Fires whenever an slot is picked
+     * @param {Ext.picker.Slot} this
+     * @param {Mixed} value The value of the pick
+     * @param {HTMLElement} node The node element of the pick
+     */
+
+    isSlot: true,
+
+    config: {
+        /**
+         * @cfg {String} title The title to use for this slot, or `null` for no title.
+         * @accessor
+         */
+        title: null,
+
+        /**
+         * @private
+         * @cfg {Boolean} showTitle
+         * @accessor
+         */
+        showTitle: true,
+
+        /**
+         * @private
+         * @cfg {String} cls The main component class
+         * @accessor
+         */
+        cls: Ext.baseCSSPrefix + 'picker-slot',
+
+        /**
+         * @cfg {String} name (required) The name of this slot.
+         * @accessor
+         */
+        name: null,
+
+        /**
+         * @cfg {Number} value The value of this slot
+         * @accessor
+         */
+        value: null,
+
+        /**
+         * @cfg {Number} flex
+         * @accessor
+         * @private
+         */
+        flex: 1,
+
+        /**
+         * @cfg {String} align The horizontal alignment of the slot's contents.
+         *
+         * Valid values are: "left", "center", and "right".
+         * @accessor
+         */
+        align: 'left',
+
+        /**
+         * @cfg {String} displayField The display field in the store.
+         * @accessor
+         */
+        displayField: 'text',
+
+        /**
+         * @cfg {String} valueField The value field in the store.
+         * @accessor
+         */
+        valueField: 'value',
+
+        /**
+         * @cfg {String} itemTpl The template to be used in this slot.
+         * If you set this, {@link #displayField} will be ignored.
+         */
+        itemTpl: null,
+
+        /**
+         * @cfg {Object} scrollable
+         * @accessor
+         * @hide
+         */
+        scrollable: {
+            direction: 'vertical',
+            indicators: false,
+            momentumEasing: {
+                minVelocity: 2
+            },
+            slotSnapEasing: {
+                duration: 100
+            }
+        },
+
+        /**
+         * @cfg {Boolean} verticallyCenterItems
+         * @private
+         */
+        verticallyCenterItems: true
+    },
+
+    platformConfig: [{
+        theme: ['Windows'],
+        title: 'choose an item'
+        // verticallyCenterItems: false
+    }],
+
+    constructor: function() {
+        /**
+         * @property selectedIndex
+         * @type Number
+         * The current `selectedIndex` of the picker slot.
+         * @private
+         */
+        this.selectedIndex = 0;
+
+        /**
+         * @property picker
+         * @type Ext.picker.Picker
+         * A reference to the owner Picker.
+         * @private
+         */
+
+        this.callParent(arguments);
+    },
+
+    /**
+     * Sets the title for this dataview by creating element.
+     * @param {String} title
+     * @return {String}
+     */
+    applyTitle: function(title) {
+        //check if the title isnt defined
+        if (title) {
+            //create a new title element
+            title = Ext.create('Ext.Component', {
+                cls: Ext.baseCSSPrefix + 'picker-slot-title',
+                docked: 'top',
+                html: title
+            });
+        }
+
+        return title;
+    },
+
+    updateTitle: function(newTitle, oldTitle) {
+        if (newTitle) {
+            this.add(newTitle);
+            this.setupBar();
+        }
+
+        if (oldTitle) {
+            this.remove(oldTitle);
+        }
+    },
+
+    updateShowTitle: function(showTitle) {
+        var title = this.getTitle(),
+            mode = showTitle ? 'show' : 'hide';
+        if (title) {
+            title.on(mode, this.setupBar, this, { single: true, delay: 50 });
+            title[showTitle ? 'show' : 'hide']();
+        }
+    },
+
+    updateDisplayField: function(newDisplayField) {
+        if (!this.config.itemTpl) {
+            this.setItemTpl('<div class="' + Ext.baseCSSPrefix + 'picker-item {cls} <tpl if="extra">' + Ext.baseCSSPrefix + 'picker-invalid</tpl>">{' + newDisplayField + '}</div>');
+        }
+    },
+
+    /**
+     * Updates the {@link #align} configuration
+     */
+    updateAlign: function(newAlign, oldAlign) {
+        var element = this.element;
+        element.addCls(Ext.baseCSSPrefix + 'picker-' + newAlign);
+        element.removeCls(Ext.baseCSSPrefix + 'picker-' + oldAlign);
+    },
+
+    /**
+     * Looks at the {@link #data} configuration and turns it into {@link #store}.
+     * @param {Object} data
+     * @return {Object}
+     */
+    applyData: function(data) {
+        var parsedData = [],
+            ln = data && data.length,
+            i, item, obj;
+
+        if (data && Ext.isArray(data) && ln) {
+            for (i = 0; i < ln; i++) {
+                item = data[i];
+                obj = {};
+                if (Ext.isArray(item)) {
+                    obj[this.valueField] = item[0];
+                    obj[this.displayField] = item[1];
+                }
+                else if (Ext.isString(item)) {
+                    obj[this.valueField] = item;
+                    obj[this.displayField] = item;
+                }
+                else if (Ext.isObject(item)) {
+                    obj = item;
+                }
+                parsedData.push(obj);
+            }
+        }
+
+        return data;
+    },
+
+    // @private
+    initialize: function() {
+        this.callParent();
+
+        var scroller = this.getScrollable().getScroller();
+
+        this.on({
+            scope: this,
+            painted: 'onPainted',
+            itemtap: 'doItemTap'
+        });
+
+        this.element.on({
+            scope: this,
+            touchstart: 'onTouchStart',
+            touchend: 'onTouchEnd'
+        });
+
+        scroller.on({
+            scope: this,
+            scrollend: 'onScrollEnd'
+        });
+    },
+
+    // @private
+    onPainted: function() {
+        this.setupBar();
+    },
+
+    /**
+     * Returns an instance of the owner picker.
+     * @return {Object}
+     * @private
+     */
+    getPicker: function() {
+        if (!this.picker) {
+            this.picker = this.getParent();
+        }
+
+        return this.picker;
+    },
+
+    // @private
+    setupBar: function() {
+        if (!this.rendered) {
+            //if the component isnt rendered yet, there is no point in calculating the padding just eyt
+            return;
+        }
+
+        var element = this.element,
+            innerElement = this.innerElement,
+            picker = this.getPicker(),
+            bar = picker.bar,
+            value = this.getValue(),
+            showTitle = this.getShowTitle(),
+            title = this.getTitle(),
+            scrollable = this.getScrollable(),
+            scroller = scrollable.getScroller(),
+            titleHeight = 0,
+            barHeight, padding;
+
+        barHeight = bar.dom.getBoundingClientRect().height;
+
+        if (showTitle && title) {
+            titleHeight = title.element.getHeight();
+        }
+
+        padding = Math.ceil((element.getHeight() - titleHeight - barHeight) / 2);
+
+        if (this.getVerticallyCenterItems()) {
+            innerElement.setStyle({
+                padding: padding + 'px 0 ' + padding + 'px'
+            });
+        }
+
+        scroller.refresh();
+        scroller.setSlotSnapSize(barHeight);
+        this.setValue(value);
+    },
+
+    // @private
+    doItemTap: function(list, index, item, e) {
+        var me = this;
+        me.selectedIndex = index;
+        me.selectedNode = item;
+        me.scrollToItem(item, true);
+    },
+
+    // @private
+    scrollToItem: function(item, animated) {
+        var y = item.getY(),
+            parentEl = item.parent(),
+            parentY = parentEl.getY(),
+            scrollView = this.getScrollable(),
+            scroller = scrollView.getScroller(),
+            difference;
+
+        difference = y - parentY;
+
+        scroller.scrollTo(0, difference, animated);
+    },
+
+    // @private
+    onTouchStart: function() {
+        this.element.addCls(Ext.baseCSSPrefix + 'scrolling');
+    },
+
+    // @private
+    onTouchEnd: function() {
+        this.element.removeCls(Ext.baseCSSPrefix + 'scrolling');
+    },
+
+    // @private
+    onScrollEnd: function(scroller, x, y) {
+        var me = this,
+            index = Math.round(y / me.picker.bar.dom.getBoundingClientRect().height),
+            viewItems = me.getViewItems(),
+            item = viewItems[index];
+
+        if (item) {
+            me.selectedIndex = index;
+            me.selectedNode = item;
+
+            me.fireEvent('slotpick', me, me.getValue(), me.selectedNode);
+        }
+    },
+
+    /**
+     * Returns the value of this slot
+     * @private
+     */
+    getValue: function(useDom) {
+        var store = this.getStore(),
+            record, value;
+
+        if (!store) {
+            return;
+        }
+
+        if (!this.rendered || !useDom) {
+            return this._value;
+        }
+
+        //if the value is ever false, that means we do not want to return anything
+        if (this._value === false) {
+            return null;
+        }
+
+        record = store.getAt(this.selectedIndex);
+
+        value = record ? record.get(this.getValueField()) : null;
+
+        return value;
+    },
+
+    /**
+     * Sets the value of this slot
+     * @private
+     */
+    setValue: function(value) {
+        return this.doSetValue(value);
+    },
+
+    /**
+     * Sets the value of this slot
+     * @private
+     */
+    setValueAnimated: function(value) {
+        return this.doSetValue(value, true);
+    },
+
+    doSetValue: function(value, animated) {
+        if (!this.rendered) {
+            //we don't want to call this until the slot has been rendered
+            this._value = value;
+            return;
+        }
+
+        var store = this.getStore(),
+            viewItems = this.getViewItems(),
+            valueField = this.getValueField(),
+            index, item;
+
+        index = store.findExact(valueField, value);
+
+        if (index == -1) {
+            index = 0;
+        }
+
+        item = Ext.get(viewItems[index]);
+
+        this.selectedIndex = index;
+        if (item) {
+            this.scrollToItem(item, (animated) ? {
+                duration: 100
+            } : false);
+            this.select(this.selectedIndex);
+        }
+
+        this._value = value;
+    }
+});
+
+/**
+ * @aside example pickers
+ * A general picker class. {@link Ext.picker.Slot}s are used to organize multiple scrollable slots into a single picker. {@link #slots} is
+ * the only necessary configuration.
+ *
+ * The {@link #slots} configuration with a few key values:
+ *
+ * - `name`: The name of the slot (will be the key when using {@link #getValues} in this {@link Ext.picker.Picker}).
+ * - `title`: The title of this slot (if {@link #useTitles} is set to `true`).
+ * - `data`/`store`: The data or store to use for this slot.
+ *
+ * Remember, {@link Ext.picker.Slot} class extends from {@link Ext.dataview.DataView}.
+ *
+ * ## Examples
+ *
+ *     @example miniphone preview
+ *     var picker = Ext.create('Ext.Picker', {
+ *         slots: [
+ *             {
+ *                 name : 'limit_speed',
+ *                 title: 'Speed',
+ *                 data : [
+ *                     {text: '50 KB/s', value: 50},
+ *                     {text: '100 KB/s', value: 100},
+ *                     {text: '200 KB/s', value: 200},
+ *                     {text: '300 KB/s', value: 300}
+ *                 ]
+ *             }
+ *         ]
+ *     });
+ *     Ext.Viewport.add(picker);
+ *     picker.show();
+ *
+ * You can also customize the top toolbar on the {@link Ext.picker.Picker} by changing the {@link #doneButton} and {@link #cancelButton} configurations:
+ *
+ *     @example miniphone preview
+ *     var picker = Ext.create('Ext.Picker', {
+ *         doneButton: 'I\'m done!',
+ *         cancelButton: false,
+ *         slots: [
+ *             {
+ *                 name : 'limit_speed',
+ *                 title: 'Speed',
+ *                 data : [
+ *                     {text: '50 KB/s', value: 50},
+ *                     {text: '100 KB/s', value: 100},
+ *                     {text: '200 KB/s', value: 200},
+ *                     {text: '300 KB/s', value: 300}
+ *                 ]
+ *             }
+ *         ]
+ *     });
+ *     Ext.Viewport.add(picker);
+ *     picker.show();
+ *
+ * Or by passing a custom {@link #toolbar} configuration:
+ *
+ *     @example miniphone preview
+ *     var picker = Ext.create('Ext.Picker', {
+ *         doneButton: false,
+ *         cancelButton: false,
+ *         toolbar: {
+ *             ui: 'light',
+ *             title: 'My Picker!'
+ *         },
+ *         slots: [
+ *             {
+ *                 name : 'limit_speed',
+ *                 title: 'Speed',
+ *                 data : [
+ *                     {text: '50 KB/s', value: 50},
+ *                     {text: '100 KB/s', value: 100},
+ *                     {text: '200 KB/s', value: 200},
+ *                     {text: '300 KB/s', value: 300}
+ *                 ]
+ *             }
+ *         ]
+ *     });
+ *     Ext.Viewport.add(picker);
+ *     picker.show();
+ */
+Ext.define('Ext.picker.Picker', {
+    extend:  Ext.Sheet ,
+    alias : 'widget.picker',
+    alternateClassName: 'Ext.Picker',
+                                                                                             
+
+    isPicker: true,
+
+    /**
+     * @event pick
+     * Fired when a slot has been picked
+     * @param {Ext.Picker} this This Picker.
+     * @param {Object} The values of this picker's slots, in `{name:'value'}` format.
+     * @param {Ext.Picker.Slot} slot An instance of Ext.Picker.Slot that has been picked.
+     */
+
+    /**
+     * @event change
+     * Fired when the value of this picker has changed the Done button has been pressed.
+     * @param {Ext.picker.Picker} this This Picker.
+     * @param {Object} value The values of this picker's slots, in `{name:'value'}` format.
+     */
+
+    /**
+     * @event cancel
+     * Fired when the cancel button is tapped and the values are reverted back to
+     * what they were.
+     * @param {Ext.Picker} this This Picker.
+     */
+
+    config: {
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        baseCls: Ext.baseCSSPrefix + 'picker',
+
+        /**
+         * @cfg {String/Mixed} doneButton
+         * Can be either:
+         *
+         * - A {String} text to be used on the Done button.
+         * - An {Object} as config for {@link Ext.Button}.
+         * - `false` or `null` to hide it.
+         * @accessor
+         */
+        doneButton: true,
+
+        /**
+         * @cfg {String/Mixed} cancelButton
+         * Can be either:
+         *
+         * - A {String} text to be used on the Cancel button.
+         * - An {Object} as config for {@link Ext.Button}.
+         * - `false` or `null` to hide it.
+         * @accessor
+         */
+        cancelButton: true,
+
+        /**
+         * @cfg {Boolean} useTitles
+         * Generate a title header for each individual slot and use
+         * the title configuration of the slot.
+         * @accessor
+         */
+        useTitles: false,
+
+        /**
+         * @cfg {Array} slots
+         * An array of slot configurations.
+         *
+         * - `name` {String} - Name of the slot
+         * - `data` {Array} - An array of text/value pairs in the format `{text: 'myKey', value: 'myValue'}`
+         * - `title` {String} - Title of the slot. This is used in conjunction with `useTitles: true`.
+         *
+         * @accessor
+         */
+        slots: null,
+
+        /**
+         * @cfg {String/Number} value The value to initialize the picker with.
+         * @accessor
+         */
+        value: null,
+
+        /**
+         * @cfg {Number} height
+         * The height of the picker.
+         * @accessor
+         */
+        height: 220,
+
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        layout: {
+            type : 'hbox',
+            align: 'stretch'
+        },
+
+        /**
+         * @cfg
+         * @hide
+         */
+        centered: false,
+
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        left : 0,
+
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        right: 0,
+
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        bottom: 0,
+
+        // @private
+        defaultType: 'pickerslot',
+
+        toolbarPosition: 'top',
+
+        /**
+         * @cfg {Ext.TitleBar/Ext.Toolbar/Object} toolbar
+         * The toolbar which contains the {@link #doneButton} and {@link #cancelButton} buttons.
+         * You can override this if you wish, and add your own configurations. Just ensure that you take into account
+         * the {@link #doneButton} and {@link #cancelButton} configurations.
+         *
+         * The default xtype is a {@link Ext.TitleBar}:
+         *
+         *     toolbar: {
+         *         items: [
+         *             {
+         *                 xtype: 'button',
+         *                 text: 'Left',
+         *                 align: 'left'
+         *             },
+         *             {
+         *                 xtype: 'button',
+         *                 text: 'Right',
+         *                 align: 'left'
+         *             }
+         *         ]
+         *     }
+         *
+         * Or to use a {@link Ext.Toolbar instead}:
+         *
+         *     toolbar: {
+         *         xtype: 'toolbar',
+         *         items: [
+         *             {
+         *                 xtype: 'button',
+         *                 text: 'Left'
+         *             },
+         *             {
+         *                 xtype: 'button',
+         *                 text: 'Left Two'
+         *             }
+         *         ]
+         *     }
+         *
+         * @accessor
+         */
+        toolbar: {
+            xtype: 'titlebar'
+        }
+    },
+
+    platformConfig: [{
+        theme: ['Windows'],
+        height: '100%',
+        toolbarPosition: 'bottom',
+        toolbar: {
+            xtype: 'toolbar',
+            layout: {
+                type: 'hbox',
+                pack: 'center'
+            }
+        },
+        doneButton: {
+            iconCls: 'check2',
+            ui: 'round',
+            text: ''
+        },
+        cancelButton: {
+            iconCls: 'delete',
+            ui: 'round',
+            text: ''
+        }
+    }, {
+        theme: ['CupertinoClassic'],
+        toolbar: {
+            ui: 'black'
+        }
+    }, {
+        theme: ['MountainView'],
+        toolbarPosition: 'bottom',
+        toolbar: {
+            defaults: {
+                flex: 1
+            }
+        }
+    }],
+
+    initialize: function() {
+        var me = this,
+            clsPrefix = Ext.baseCSSPrefix,
+            innerElement = this.innerElement;
+
+        //insert the mask, and the picker bar
+        this.mask = innerElement.createChild({
+            cls: clsPrefix + 'picker-mask'
+        });
+
+        this.bar = this.mask.createChild({
+            cls: clsPrefix + 'picker-bar'
+        });
+
+        me.on({
+            scope   : this,
+            delegate: 'pickerslot',
+            slotpick: 'onSlotPick'
+        });
+    },
+
+    /**
+     * @private
+     */
+    applyToolbar: function(config) {
+        if (config === true) {
+            config = {};
+        }
+
+        Ext.applyIf(config, {
+            docked: this.getToolbarPosition()
+        });
+
+        return Ext.factory(config, 'Ext.TitleBar', this.getToolbar());
+    },
+
+    /**
+     * @private
+     */
+    updateToolbar: function(newToolbar, oldToolbar) {
+        if (newToolbar) {
+            this.add(newToolbar);
+        }
+
+        if (oldToolbar) {
+            this.remove(oldToolbar);
+        }
+    },
+
+    /**
+     * Updates the {@link #doneButton} configuration. Will change it into a button when appropriate, or just update the text if needed.
+     * @param {Object} config
+     * @return {Object}
+     */
+    applyDoneButton: function(config) {
+        if (config) {
+            if (Ext.isBoolean(config)) {
+                config = {};
+            }
+
+            if (typeof config == "string") {
+                config = {
+                    text: config
+                };
+            }
+
+            Ext.applyIf(config, {
+                ui: 'action',
+                align: 'right',
+                text: 'Done'
+            });
+        }
+
+        return Ext.factory(config, 'Ext.Button', this.getDoneButton());
+    },
+
+    updateDoneButton: function(newDoneButton, oldDoneButton) {
+        var toolbar = this.getToolbar();
+
+        if (newDoneButton) {
+            toolbar.add(newDoneButton);
+            newDoneButton.on('tap', this.onDoneButtonTap, this);
+        } else if (oldDoneButton) {
+            toolbar.remove(oldDoneButton);
+        }
+    },
+
+    /**
+     * Updates the {@link #cancelButton} configuration. Will change it into a button when appropriate, or just update the text if needed.
+     * @param {Object} config
+     * @return {Object}
+     */
+    applyCancelButton: function(config) {
+        if (config) {
+            if (Ext.isBoolean(config)) {
+                config = {};
+            }
+
+            if (typeof config == "string") {
+                config = {
+                    text: config
+                };
+            }
+
+            Ext.applyIf(config, {
+                align: 'left',
+                text: 'Cancel'
+            });
+        }
+
+        return Ext.factory(config, 'Ext.Button', this.getCancelButton());
+    },
+
+    updateCancelButton: function(newCancelButton, oldCancelButton) {
+        var toolbar = this.getToolbar();
+
+        if (newCancelButton) {
+            toolbar.add(newCancelButton);
+            newCancelButton.on('tap', this.onCancelButtonTap, this);
+        } else if (oldCancelButton) {
+            toolbar.remove(oldCancelButton);
+        }
+    },
+
+    /**
+     * @private
+     */
+    updateUseTitles: function(useTitles) {
+        var innerItems = this.getInnerItems(),
+            ln = innerItems.length,
+            cls = Ext.baseCSSPrefix + 'use-titles',
+            i, innerItem;
+
+        //add a cls onto the picker
+        if (useTitles) {
+            this.addCls(cls);
+        } else {
+            this.removeCls(cls);
+        }
+
+        //show the time on each of the slots
+        for (i = 0; i < ln; i++) {
+            innerItem = innerItems[i];
+
+            if (innerItem.isSlot) {
+                innerItem.setShowTitle(useTitles);
+            }
+        }
+    },
+
+    applySlots: function(slots) {
+        //loop through each of the slots and add a reference to this picker
+        if (slots) {
+            var ln = slots.length,
+                i;
+
+            for (i = 0; i < ln; i++) {
+                slots[i].picker = this;
+            }
+        }
+
+        return slots;
+    },
+
+    /**
+     * Adds any new {@link #slots} to this picker, and removes existing {@link #slots}
+     * @private
+     */
+    updateSlots: function(newSlots) {
+        var bcss = Ext.baseCSSPrefix,
+            innerItems;
+
+        this.removeAll();
+
+        if (newSlots) {
+            this.add(newSlots);
+        }
+
+        innerItems = this.getInnerItems();
+        if (innerItems.length > 0) {
+            innerItems[0].addCls(bcss + 'first');
+            innerItems[innerItems.length - 1].addCls(bcss + 'last');
+        }
+
+        this.updateUseTitles(this.getUseTitles());
+    },
+
+    /**
+     * @private
+     * Called when the done button has been tapped.
+     */
+    onDoneButtonTap: function() {
+        var oldValue = this._value,
+            newValue = this.getValue(true);
+
+        if (newValue != oldValue) {
+            this.fireEvent('change', this, newValue);
+        }
+
+        this.hide();
+        Ext.util.InputBlocker.unblockInputs();
+    },
+
+    /**
+     * @private
+     * Called when the cancel button has been tapped.
+     */
+    onCancelButtonTap: function() {
+        this.fireEvent('cancel', this);
+        this.hide();
+        Ext.util.InputBlocker.unblockInputs();
+    },
+
+    /**
+     * @private
+     * Called when a slot has been picked.
+     */
+    onSlotPick: function(slot) {
+        this.fireEvent('pick', this, this.getValue(true), slot);
+    },
+
+    show: function() {
+        if (this.getParent() === undefined) {
+            Ext.Viewport.add(this);
+        }
+
+        this.callParent(arguments);
+
+        if (!this.isHidden()) {
+            this.setValue(this._value);
+        }
+        Ext.util.InputBlocker.blockInputs();
+    },
+
+    /**
+     * Sets the values of the pickers slots.
+     * @param {Object} values The values in a {name:'value'} format.
+     * @param {Boolean} animated `true` to animate setting the values.
+     * @return {Ext.Picker} this This picker.
+     */
+    setValue: function(values, animated) {
+        var me = this,
+            slots = me.getInnerItems(),
+            ln = slots.length,
+            key, slot, loopSlot, i, value;
+
+        if (!values) {
+            values = {};
+            for (i = 0; i < ln; i++) {
+                //set the value to false so the slot will return null when getValue is called
+                values[slots[i].config.name] = null;
+            }
+        }
+
+        for (key in values) {
+            slot = null;
+            value = values[key];
+            for (i = 0; i < slots.length; i++) {
+                loopSlot = slots[i];
+                if (loopSlot.config.name == key) {
+                    slot = loopSlot;
+                    break;
+                }
+            }
+
+            if (slot) {
+                if (animated) {
+                    slot.setValueAnimated(value);
+                } else {
+                    slot.setValue(value);
+                }
+            }
+        }
+
+        me._values = me._value = values;
+
+        return me;
+    },
+
+    setValueAnimated: function(values) {
+        this.setValue(values, true);
+    },
+
+    /**
+     * Returns the values of each of the pickers slots
+     * @return {Object} The values of the pickers slots
+     */
+    getValue: function(useDom) {
+        var values = {},
+            items = this.getItems().items,
+            ln = items.length,
+            item, i;
+
+        if (useDom) {
+            for (i = 0; i < ln; i++) {
+                item = items[i];
+                if (item && item.isSlot) {
+                    values[item.getName()] = item.getValue(useDom);
+                }
+            }
+
+            this._values = values;
+        }
+
+        return this._values;
+    },
+
+    /**
+     * Returns the values of each of the pickers slots.
+     * @return {Object} The values of the pickers slots.
+     */
+    getValues: function() {
+        return this.getValue();
+    },
+
+    destroy: function() {
+        this.callParent();
+        Ext.destroy(this.mask, this.bar);
+    }
+}, function() {
+});
+
+
+/**
+ * @aside guide forms
+ *
+ * Simple Select field wrapper. Example usage:
+ *
+ *     @example
+ *     Ext.create('Ext.form.Panel', {
+ *         fullscreen: true,
+ *         items: [
+ *             {
+ *                 xtype: 'fieldset',
+ *                 title: 'Select',
+ *                 items: [
+ *                     {
+ *                         xtype: 'selectfield',
+ *                         label: 'Choose one',
+ *                         options: [
+ *                             {text: 'First Option',  value: 'first'},
+ *                             {text: 'Second Option', value: 'second'},
+ *                             {text: 'Third Option',  value: 'third'}
+ *                         ]
+ *                     }
+ *                 ]
+ *             }
+ *         ]
+ *     });
+ */
+Ext.define('Ext.field.Select', {
+    extend:  Ext.field.Text ,
+    xtype: 'selectfield',
+    alternateClassName: 'Ext.form.Select',
+               
+                    
+                            
+                         
+                                
+                           
+      
+
+    /**
+     * @event change
+     * Fires when an option selection has changed
+     * @param {Ext.field.Select} this
+     * @param {Mixed} newValue The new value
+     * @param {Mixed} oldValue The old value
+     */
+
+    /**
+     * @event focus
+     * Fires when this field receives input focus. This happens both when you tap on the field and when you focus on the field by using
+     * 'next' or 'tab' on a keyboard.
+     *
+     * Please note that this event is not very reliable on Android. For example, if your Select field is second in your form panel,
+     * you cannot use the Next button to get to this select field. This functionality works as expected on iOS.
+     * @param {Ext.field.Select} this This field
+     * @param {Ext.event.Event} e
+     */
+
+    config: {
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        ui: 'select',
+
+        /**
+         * @cfg {Boolean} useClearIcon
+         * @hide
+         */
+
+        /**
+         * @cfg {String/Number} valueField The underlying {@link Ext.data.Field#name data value name} (or numeric Array index) to bind to this
+         * Select control.
+         * @accessor
+         */
+        valueField: 'value',
+
+        /**
+         * @cfg {String/Number} displayField The underlying {@link Ext.data.Field#name data value name} (or numeric Array index) to bind to this
+         * Select control. This resolved value is the visibly rendered value of the available selection options.
+         * @accessor
+         */
+        displayField: 'text',
+
+        /**
+         * @cfg {Ext.data.Store/Object/String} store The store to provide selection options data.
+         * Either a Store instance, configuration object or store ID.
+         * @accessor
+         */
+        store: null,
+
+        /**
+         * @cfg {Array} options An array of select options.
+         *
+         *     [
+         *         {text: 'First Option',  value: 'first'},
+         *         {text: 'Second Option', value: 'second'},
+         *         {text: 'Third Option',  value: 'third'}
+         *     ]
+         *
+         * __Note:__ Option object member names should correspond with defined {@link #valueField valueField} and {@link #displayField displayField} values.
+         * This config will be ignored if a {@link #store store} instance is provided.
+         * @accessor
+         */
+        options: null,
+
+        /**
+         * @cfg {String} hiddenName Specify a `hiddenName` if you're using the {@link Ext.form.Panel#standardSubmit standardSubmit} option.
+         * This name will be used to post the underlying value of the select to the server.
+         * @accessor
+         */
+        hiddenName: null,
+
+        /**
+         * @cfg {Object} component
+         * @accessor
+         * @hide
+         */
+        component: {
+            useMask: true
+        },
+
+        /**
+         * @cfg {Boolean} clearIcon
+         * @hide
+         * @accessor
+         */
+        clearIcon: false,
+
+        /**
+         * @cfg {String/Boolean} usePicker
+         * `true` if you want this component to always use a {@link Ext.picker.Picker}.
+         * `false` if you want it to use a popup overlay {@link Ext.List}.
+         * `auto` if you want to show a {@link Ext.picker.Picker} only on phones.
+         */
+        usePicker: 'auto',
+
+        /**
+         * @cfg {Boolean} autoSelect
+         * `true` to auto select the first value in the {@link #store} or {@link #options} when they are changed. Only happens when
+         * the {@link #value} is set to `null`.
+         */
+        autoSelect: true,
+
+        /**
+         * @cfg {Object} defaultPhonePickerConfig
+         * The default configuration for the picker component when you are on a phone.
+         */
+        defaultPhonePickerConfig: null,
+
+        /**
+         * @cfg {Object} defaultTabletPickerConfig
+         * The default configuration for the picker component when you are on a tablet.
+         */
+        defaultTabletPickerConfig: null,
+
+        /**
+         * @cfg
+         * @inheritdoc
+         */
+        name: 'picker',
+
+        /**
+         * @cfg {String} pickerSlotAlign
+         * The alignment of text in the picker created by this Select
+         * @private
+         */
+        pickerSlotAlign: 'center'
+    },
+
+    platformConfig: [
+        {
+            theme: ['Windows'],
+            pickerSlotAlign: 'left'
+        }
+    ],
+
+    // @private
+    initialize: function() {
+        var me = this,
+            component = me.getComponent();
+
+        me.callParent();
+
+        component.on({
+            scope: me,
+            masktap: 'onMaskTap'
+        });
+
+        component.doMaskTap = Ext.emptyFn;
+
+        if (Ext.browser.is.AndroidStock2) {
+            component.input.dom.disabled = true;
+        }
+
+        if (Ext.theme.name === "Blackberry") {
+            this.label.on({
+                scope: me,
+                tap: "onFocus"
+            });
+        }
+    },
+
+    getElementConfig: function() {
+        if (Ext.theme.name === "Blackberry") {
+                var prefix = Ext.baseCSSPrefix;
+
+                return {
+                    reference: 'element',
+                    className: 'x-container',
+                    children: [
+                        {
+                            reference: 'innerElement',
+                            cls: prefix + 'component-outer',
+                            children: [
+                                {
+                                    reference: 'label',
+                                    cls: prefix + 'form-label',
+                                    children: [{
+                                        reference: 'labelspan',
+                                        tag: 'span'
+                                    }]
+                                }
+                            ]
+                        }
+                    ]
+                };
+        } else {
+            return this.callParent(arguments);
+        }
+    },
+
+    /**
+     * @private
+     */
+    updateDefaultPhonePickerConfig: function(newConfig) {
+        var picker = this.picker;
+        if (picker) {
+            picker.setConfig(newConfig);
+        }
+    },
+
+    /**
+     * @private
+     */
+    updateDefaultTabletPickerConfig: function(newConfig) {
+        var listPanel = this.listPanel;
+        if (listPanel) {
+            listPanel.setConfig(newConfig);
+        }
+    },
+
+    /**
+     * @private
+     * Checks if the value is `auto`. If it is, it only uses the picker if the current device type
+     * is a phone.
+     */
+    applyUsePicker: function(usePicker) {
+        if (usePicker == "auto") {
+            usePicker = (Ext.os.deviceType == 'Phone');
+        }
+
+        return Boolean(usePicker);
+    },
+
+    syncEmptyCls: Ext.emptyFn,
+
+    /**
+     * @private
+     */
+    applyValue: function(value) {
+        var record = value,
+            index, store;
+
+        //we call this so that the options configruation gets intiailized, so that a store exists, and we can
+        //find the correct value
+        this.getOptions();
+
+        store = this.getStore();
+
+        if ((value != undefined && !value.isModel) && store) {
+            index = store.find(this.getValueField(), value, null, null, null, true);
+
+            if (index == -1) {
+                index = store.find(this.getDisplayField(), value, null, null, null, true);
+            }
+
+            record = store.getAt(index);
+        }
+
+        return record;
+    },
+
+    updateValue: function(newValue, oldValue) {
+        this.record = newValue;
+
+        this.callParent([(newValue && newValue.isModel) ? newValue.get(this.getDisplayField()) : '']);
+    },
+
+    getValue: function() {
+        var record = this.record;
+        return (record && record.isModel) ? record.get(this.getValueField()) : null;
+    },
+
+    /**
+     * Returns the current selected {@link Ext.data.Model record} instance selected in this field.
+     * @return {Ext.data.Model} the record.
+     */
+    getRecord: function() {
+        return this.record;
+    },
+
+    // @private
+    getPhonePicker: function() {
+        var config = this.getDefaultPhonePickerConfig();
+
+        if (!this.picker) {
+            this.picker = Ext.create('Ext.picker.Picker', Ext.apply({
+                slots: [
+                    {
+                        align: this.getPickerSlotAlign(),
+                        name: this.getName(),
+                        valueField: this.getValueField(),
+                        displayField: this.getDisplayField(),
+                        value: this.getValue(),
+                        store: this.getStore()
+                    }
+                ],
+                listeners: {
+                    change: this.onPickerChange,
+                    scope: this
+                }
+            }, config));
+        }
+
+        return this.picker;
+    },
+
+    // @private
+    getTabletPicker: function() {
+        var config = this.getDefaultTabletPickerConfig();
+
+        if (!this.listPanel) {
+            this.listPanel = Ext.create('Ext.Panel', Ext.apply({
+                left: 0,
+                top: 0,
+                modal: true,
+                cls: Ext.baseCSSPrefix + 'select-overlay',
+                layout: 'fit',
+                hideOnMaskTap: true,
+                width: Ext.os.is.Phone ? '14em' : '18em',
+                height: (Ext.os.is.BlackBerry && Ext.os.version.getMajor() === 10) ? '12em' : (Ext.os.is.Phone ? '12.5em' : '22em'),
+                items: {
+                    xtype: 'list',
+                    store: this.getStore(),
+                    itemTpl: '<span class="x-list-label">{' + this.getDisplayField() + ':htmlEncode}</span>',
+                    listeners: {
+                        select: this.onListSelect,
+                        itemtap: this.onListTap,
+                        scope: this
+                    }
+                }
+            }, config));
+        }
+
+        return this.listPanel;
+    },
+
+    // @private
+    onMaskTap: function() {
+        this.onFocus();
+
+        return false;
+    },
+
+    /**
+     * Shows the picker for the select field, whether that is a {@link Ext.picker.Picker} or a simple
+     * {@link Ext.List list}.
+     */
+    showPicker: function() {
+        var me = this,
+            store = me.getStore(),
+            value = me.getValue();
+
+        //check if the store is empty, if it is, return
+        if (!store || store.getCount() === 0) {
+            return;
+        }
+
+        if (me.getReadOnly()) {
+            return;
+        }
+
+        me.isFocused = true;
+
+        if (me.getUsePicker()) {
+            var picker = me.getPhonePicker(),
+                name = me.getName(),
+                pickerValue = {};
+
+            pickerValue[name] = value;
+            picker.setValue(pickerValue);
+
+            if (!picker.getParent()) {
+                Ext.Viewport.add(picker);
+            }
+
+            picker.show();
+        } else {
+            var listPanel = me.getTabletPicker(),
+                list = listPanel.down('list'),
+                index, record;
+
+            if (!listPanel.getParent()) {
+                Ext.Viewport.add(listPanel);
+            }
+
+            listPanel.showBy(me.getComponent(), null);
+
+            if (value || me.getAutoSelect()) {
+                store = list.getStore();
+                index = store.find(me.getValueField(), value, null, null, null, true);
+                record = store.getAt(index);
+
+                if (record) {
+                    list.select(record, null, true);
+                }
+            }
+        }
+    },
+
+    // @private
+    onListSelect: function(item, record) {
+        var me = this;
+        if (record) {
+            me.setValue(record);
+        }
+    },
+
+    onListTap: function() {
+        this.listPanel.hide({
+            type: 'fade',
+            out: true,
+            scope: this
+        });
+    },
+
+    // @private
+    onPickerChange: function(picker, value) {
+        var me = this,
+            newValue = value[me.getName()],
+            store = me.getStore(),
+            index = store.find(me.getValueField(), newValue, null, null, null, true),
+            record = store.getAt(index);
+
+        me.setValue(record);
+    },
+
+    onChange: function(component, newValue, oldValue) {
+        var me = this,
+            store = me.getStore(),
+            index = (store) ? store.find(me.getDisplayField(), oldValue, null, null, null, true) : -1,
+            valueField = me.getValueField(),
+            record = (store) ? store.getAt(index) : null;
+
+        oldValue = (record) ? record.get(valueField) : null;
+
+        me.fireEvent('change', me, me.getValue(), oldValue);
+    },
+
+    /**
+     * Updates the underlying `<options>` list with new values.
+     *
+     * @param {Array} newOptions An array of options configurations to insert or append.
+     *
+     *     selectBox.setOptions([
+     *         {text: 'First Option',  value: 'first'},
+     *         {text: 'Second Option', value: 'second'},
+     *         {text: 'Third Option',  value: 'third'}
+     *     ]).setValue('third');
+     *
+     * __Note:__ option object member names should correspond with defined {@link #valueField valueField} and
+     * {@link #displayField displayField} values.
+     *
+     * @return {Ext.field.Select} this
+     */
+    updateOptions: function(newOptions) {
+        var store = this.getStore();
+
+        if (!store) {
+            this.setStore(true);
+            store = this._store;
+        }
+
+        if (!newOptions) {
+            store.clearData();
+        }
+        else {
+            store.setData(newOptions);
+            this.onStoreDataChanged(store);
+        }
+        return this;
+    },
+
+    applyStore: function(store) {
+        if (store === true) {
+            store = Ext.create('Ext.data.Store', {
+                fields: [this.getValueField(), this.getDisplayField()],
+                autoDestroy: true
+            });
+        }
+
+        if (store) {
+            store = Ext.data.StoreManager.lookup(store);
+
+            store.on({
+                scope: this,
+                addrecords: 'onStoreDataChanged',
+                removerecords: 'onStoreDataChanged',
+                updaterecord: 'onStoreDataChanged',
+                refresh: 'onStoreDataChanged'
+            });
+        }
+
+        return store;
+    },
+
+    updateStore: function(newStore) {
+        if (newStore) {
+            this.onStoreDataChanged(newStore);
+        }
+
+        if (this.getUsePicker() && this.picker) {
+            this.picker.down('pickerslot').setStore(newStore);
+        } else if (this.listPanel) {
+            this.listPanel.down('dataview').setStore(newStore);
+        }
+    },
+
+    /**
+     * Called when the internal {@link #store}'s data has changed.
+     */
+    onStoreDataChanged: function(store) {
+        var initialConfig = this.getInitialConfig(),
+            value = this.getValue();
+
+        if (value || value == 0) {
+            this.updateValue(this.applyValue(value));
+        }
+
+        if (this.getValue() === null) {
+            if (initialConfig.hasOwnProperty('value')) {
+                this.setValue(initialConfig.value);
+            }
+
+            if (this.getValue() === null && this.getAutoSelect()) {
+                if (store.getCount() > 0) {
+                    this.setValue(store.getAt(0));
+                }
+            }
+        }
+    },
+
+    /**
+     * @private
+     */
+    doSetDisabled: function(disabled) {
+        var component = this.getComponent();
+        if (component) {
+            component.setDisabled(disabled);
+        }
+        Ext.Component.prototype.doSetDisabled.apply(this, arguments);
+    },
+
+    /**
+     * @private
+     */
+    setDisabled: function() {
+        Ext.Component.prototype.setDisabled.apply(this, arguments);
+    },
+
+    // @private
+    updateLabelWidth: function() {
+        if (Ext.theme.name === "Blackberry") {
+            return;
+        } else {
+            this.callParent(arguments);
+        }
+    },
+
+    // @private
+    updateLabelAlign: function() {
+        if (Ext.theme.name === "Blackberry") {
+            return;
+        } else {
+            this.callParent(arguments);
+        }
+    },
+
+    /**
+     * Resets the Select field to the value of the first record in the store.
+     * @return {Ext.field.Select} this
+     * @chainable
+     */
+    reset: function() {
+        var store = this.getStore(),
+            record = (this.originalValue) ? this.originalValue : store.getAt(0);
+
+        if (store && record) {
+            this.setValue(record);
+        }
+
+        return this;
+    },
+
+    onFocus: function(e) {
+        if (this.getDisabled()) {
+            return false;
+        }
+
+        var component = this.getComponent();
+        this.fireEvent('focus', this, e);
+
+        if (Ext.os.is.Android4) {
+            component.input.dom.focus();
+        }
+        component.input.dom.blur();
+
+        this.isFocused = true;
+
+        this.showPicker();
+    },
+
+    destroy: function() {
+        this.callParent(arguments);
+        var store = this.getStore();
+
+        if (store && store.getAutoDestroy()) {
+            Ext.destroy(store);
+        }
+
+        Ext.destroy(this.listPanel, this.picker);
+    }
+});
+
+/**
  * @aside guide forms
  *
  * The Password field creates a password input and is usually created inside a form. Because it creates a password
@@ -73491,116 +75195,176 @@ Ext.define('Ext.viewport.Viewport', {
  */
 
 var userItems = [
-        {
-            title: 'Home',
-            iconCls: 'home',
-            items: [
-                {
-                    docked: 'top',
-                    xtype: 'titlebar',
-                    cls:'titleBar',
-                    title: 'SIMAS',
-                    items: [
-                        {
-                            xtype: 'button',
-                            iconCls: 'list',
-                            ui: 'plain',
-                            handler: function () {
-                                if (Ext.Viewport.getMenus().left.isHidden()) {
-                                    Ext.Viewport.showMenu('left');
-                                }
-                                else {
-                                    Ext.Viewport.hideMenu('left');
-                                }
-                            }
-                        },
-                        {
-                            xtype: 'button',
-                            itemId: 'logOffButton',
-                            align: 'right',
-                            cls:"logoutButton"
-                        }
-                    ]
-                },
-                {
-                    xtype: 'button',
-                    ui: 'normal',
-                    cls:'newScale',
-                    text: '+',
-                    action: 'push-view_0'
-                }
-
-            ]
+    {
+        title: 'Home',
+        iconCls: 'home',
+        layout:{
+            type: 'hbox',
+            pack: 'center',
+            align: 'center'
         },
-        {
-            title: 'Registos',
-            iconCls: 'time',
-            items: [
-                {
-                    docked: 'top',
-                    xtype: 'titlebar',
-                    cls:'titleBar',
-                    title: 'Registos pessoais',
-                    items: [
-                        {
-                            xtype: 'button',
-                            iconCls: 'list',
-                            ui: 'plain',
-                            handler: function () {
-                                if (Ext.Viewport.getMenus().left.isHidden()) {
-                                    Ext.Viewport.showMenu('left');
-                                }
-                                else {
-                                    Ext.Viewport.hideMenu('left');
-                                }
+        items: [
+            {
+                docked: 'top',
+                xtype: 'titlebar',
+                cls: 'titleBar',
+                title: 'SIMAS',
+                items: [
+                    {
+                        xtype: 'button',
+                        iconCls: 'list',
+                        ui: 'plain',
+                        handler: function () {
+                            if (Ext.Viewport.getMenus().left.isHidden()) {
+                                Ext.Viewport.showMenu('left');
                             }
-                        },
-                        {
-                            xtype: 'button',
-                            itemId: 'logOffButton',
-                            align: 'right',
-                            cls:"logoutButton"
+                            else {
+                                Ext.Viewport.hideMenu('left');
+                            }
                         }
-                    ]
+                    },
+                    {
+                        xtype: 'button',
+                        itemId: 'logOffButton',
+                        align: 'right',
+                        cls: "logoutButton"
+                    }
+                ]
+            },
+            {
+                xtype: 'button',
+                ui: 'normal',
+                cls: 'newScale',
+//                text: '+',
+                action: 'push-view_0'
+            }
+
+        ]
+    },
+    {
+        title: 'Registos',
+        iconCls: 'time',
+        items: [
+            {
+                docked: 'top',
+                xtype: 'titlebar',
+                cls: 'titleBar',
+                title: 'Registos pessoais',
+                items: [
+                    {
+                        xtype: 'button',
+                        iconCls: 'list',
+                        ui: 'plain',
+                        handler: function () {
+                            if (Ext.Viewport.getMenus().left.isHidden()) {
+                                Ext.Viewport.showMenu('left');
+                            }
+                            else {
+                                Ext.Viewport.hideMenu('left');
+                            }
+                        }
+                    },
+                    {
+                        xtype: 'button',
+                        itemId: 'logOffButton',
+                        align: 'right',
+                        cls: "logoutButton"
+                    }
+                ]
+            },
+            {
+                xtype: 'list',
+                id: 'dataViewAllResultsID',
+                cls:'simasListResults',
+                grouped: true,
+                html: '<div class="dataViewHeader"><div>Data</div><div>Escala</div><div>Valor</div></div>',
+                masked: {
+                    xtype: 'loadmask',
+                    message: 'A carregar a sua lista...'
                 },
-                {
-                    xtype: 'dataview',
-//                    layout:'fit',
-                    html:'<div class="dataViewHeader"><div>Valor</div><div>Data</div><div>Escala</div></div>',
-                    masked: {
-                        xtype: 'loadmask',
-                        message: 'A carregar a sua lista...'
+                store: {
+                    autoLoad: true,
+                    sorters: [
+                        {
+                            property: 'hora',
+                            direction: 'DESC'
+                        }
+                    ],
+                    fields: ['dia', 'hora', 'table', 'amount'],
+                    grouper: {
+                        sortProperty: 'dia',
+                        direction: 'DESC',
+                        groupFn: function (item) {
+                            return item.get('dia');
+                        }
                     },
-                    store: {
-                        autoLoad: true,
-                        fields: ['amount', 'timestamp','table'],
-                        sorters: [
-                            {
-                                property: 'timestamp',
-                                direction: 'DESC'
-                            }
+                    proxy: {
+                        type: 'jsonp',
+                        url: 'http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID"),
+                        reader: {
+                            type: 'json',
+                            rootProperty: 'data'
+                        }
+                    }
+                },
+                height: 1500,
+                itemTpl: '<div class="dataItem" style="width: 100%"><div style="width: 33%;float:left;">{hora}</div><div style="width: 33%;float:left;">{table}</div><div style="width: 33%;float:left;">{amount}</div></div>',
+                trackOver: true
+            },
+            {
+                xtype: 'titlebar',
+                docked: 'top',
+                ui: 'neutral',
+                id: 'filterTitleBar',
+                items: [
+                    {
+                        xtype: 'selectfield',
+                        label: 'Filtrar por',
+                        labelWrap:true,
+                        minWidth:'300px',
+                        id: 'filterSelectID',
+                        align: 'right',
+                        options: [
+                            { text: 'Nada', value: 'none'  },
+                            { text: 'Numérica', value: 'Numérica'  },
+                            { text: 'Verbal', value: 'Verbal' },
+                            { text: 'Analógica', value: 'Analógica'  },
+                            { text: 'Smiles', value: 'Smiles'  },
+                            { text: 'Depressão', value: 'Depressão'  }
                         ],
-                        proxy: {
-                            type: 'jsonp',
-                            url: 'http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID"),
-                            reader: {
-                                type: 'json',
-                                rootProperty: 'data'
+                        listeners: {
+                            change: function () {
+                                var sto = Ext.getCmp('dataViewAllResultsID').getStore(),
+                                    selectValue = Ext.getCmp('filterSelectID').getValue();
+
+                                if (selectValue == "none") {
+                                    Ext.getCmp('dataViewAllResultsID').getStore().clearFilter();
+                                } else {
+                                    sto.clearFilter();
+                                    sto.filter('table', selectValue);
+                                }
                             }
                         }
                     },
-                    height: 1500,
-                    itemTpl: '<div class="dataItem" style="width: 100%"><div style="width: 33%;float:left;">{amount}</div><div style="width: 33%;float:left;">{timestamp}</div><div style="width: 33%;float:left;">{table}</div></div>',
-                    trackOver: true
-                }
-            ]
-        }
-    ];
+                    {
+                        text: 'Limpar filtros',
+                        ui: 'decline',
+                        align: 'right',
+                        handler: function () {
+                            Ext.getCmp('dataViewAllResultsID').getStore().clearFilter();
+                            Ext.getCmp('filterSelectID').setValue("none");
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+];
 
 Ext.define('MyApp.view.Main', {
     extend:  Ext.tab.Panel ,
     alias: 'widget.mainMenuView',
-                                                                                                                              
+                                                                                                                                
     config: {
         tabBarPosition: 'bottom',
         itemId: 'configPanel',
@@ -73636,8 +75400,9 @@ Ext.define('MyApp.view.Main', {
             initialize: function () {
                 Ext.Viewport.setMenu(this.createMenu('left'), {
                     side: 'left',
-                    reveal: true
+                    reveal: false
                 });
+                Ext.Viewport.showMenu('left');
             }
         }
     },
@@ -73649,12 +75414,22 @@ Ext.define('MyApp.view.Main', {
                 width: 200,
                 height: '100%',
                 scrollable: false,
+                grouped: true,
+                store: {
+                    fields: ['title', 'order', 'name', 'type'],
+                    sorters: 'order',
+                    grouper: {
+                        groupFn: function (item) {
+                            return item.get('type');
+                        }
+                    }
+                },
                 data: [
-                    {title: 'Escala numérica', name: 'push-view_1'},
-                    {title: 'Escala descritiva verbal', name: 'push-view_2'},
-                    {title: 'Escala visual analógica', name: 'push-view_3'},
-                    {title: 'Escala de smiles', name: 'push-view_4'},
-                    {title: 'Escala de depressão pós-parto', name: 'push-view_5'}
+                    {title: 'Numérica', order: '1', name: 'push-view_1', type: 'Escalas da dor'},
+                    {title: 'Descritiva verbal', order: '2', name: 'push-view_2', type: 'Escalas da dor'},
+                    {title: 'Visual analógica', order: '3', name: 'push-view_3', type: 'Escalas da dor'},
+                    {title: 'Smiles', order: '4', name: 'push-view_4', type: 'Escalas da dor'},
+                    {title: 'Depressão pós-parto', order: '5', name: 'push-view_5', type: 'Questionários'}
                 ],
                 listeners: {
                     select: function (view, record) {
@@ -73749,7 +75524,7 @@ Ext.define('MyApp.view.Main', {
 
                 Ext.Viewport.setMasked(false);
             },
-            failure: function(response, opts) {
+            failure: function (response, opts) {
 
                 Ext.Viewport.setMasked(false);
 
@@ -74140,6 +75915,7 @@ Ext.define('MyApp.view.EscalaNumerica', {
         ]
     },
     backButtonHandler: function () {
+        Ext.getCmp('dataViewAllResultsID').getStore().load();
         Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
         history.pushState(null, "");
     },
@@ -74304,7 +76080,7 @@ Ext.define('MyApp.view.EscalaSmiles', {
                     type: 'hbox',
                     pack: 'center'
                 },
-                /*layout:{
+                 /*layout:{
                     type:'hbox'
                 },*/
                 items: [
@@ -74828,7 +76604,6 @@ Ext.define('MyApp.view.EscalaDepressao', {
                                                                                                                      
     id: 'depressionViewID',
     config: {
-        tabBarPosition: 'bottom',
         items: [
             {
                 title: 'Home',
@@ -74855,6 +76630,17 @@ Ext.define('MyApp.view.EscalaDepressao', {
                                 align: 'left'
                             }
                         ]
+                    },
+                    {
+                        tabBarPosition: 'bottom',
+                        xtype: 'tabpanel',
+                        items: [
+                            {
+                                title: 'Home',
+                                iconCls: 'home',
+                                html: 'Home Screen'
+                            }
+                        ]
                     }
                 ]
             },
@@ -74863,395 +76649,106 @@ Ext.define('MyApp.view.EscalaDepressao', {
                 id: 'depressionPanel',
                 layout: {
                     type: 'vbox'
-//                    type:'vbox'
                 },
                 items: [
-                    {
-                        xtype: 'label',
-                        html: '<br />Dado que teve um bebé há pouco tempo, gostaríamos de saber como se sente.<br />' +
-                            'Por favor, seleccione a resposta que mais se aproxima dos seus sentimentos nos últimos 7 dias.<br />' +
-                            'Obrigado.<br/><br/>',
-                        cls: 'infoLabel'
-                    },
                     {
                         xtype: 'textfield',
                         name: 'childAge',
                         id: 'childAgeID',
                         label: 'Idade do Bebé:',
-                        cls: 'chilAge',
+                        cls: 'childAge',
                         clearIcon: false,
                         required: true,
-                        labelAlign: 'top'
-                    },
-                    {
-                        xtype: 'label',
-                        html: '<br /><b>Nos últimos 7 dias:</b><br/><br/><b>1.</b>Tenho sido capaz de me rir e ver o lado divertido das coisas',
-                        cls: 'questionLabel'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question1',
-                        value: '0',
-                        cls: 'questionRadio',
                         labelAlign: 'left',
-                        label: 'Tanto como dantes'
+                        labelWidth:'60%',
+                        width:'75%',
+                        style:'margin-left:20px'
                     },
                     {
-                        xtype: 'radiofield',
-                        name: 'question1',
-                        value: '1',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Menos do que antes'
+                        xtype: 'fieldset',
+                        title: '<br /><b>Nos últimos 7 dias:</b><br/><br/><b>1.</b>Tenho sido capaz de me rir e ver o lado divertido das coisas',
+                        cls:'depressionFieldSet',
+                        items: [
+                            {
+                                xtype: 'radiofield',
+                                name: 'question1',
+                                value: '0',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Tanto como dantes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question1',
+                                value: '1',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Menos do que antes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question1',
+                                value: '2',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Muito menos do que antes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question1',
+                                value: '3',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Nunca'
+                            }
+                        ]
                     },
                     {
-                        xtype: 'radiofield',
-                        name: 'question1',
-                        value: '2',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Muito menos do que antes'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question1',
-                        value: '3',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Nunca'
-                    },
-                    {
-                        xtype: 'label',
-                        html: '<br /><b>2.</b>Tenho tido esperança no futuro.',
-                        cls: 'questionLabel'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question2',
-                        value: '0',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Tanta como sempre tive'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question2',
-                        value: '1',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: ' Menos do que costumava ter'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question2',
-                        value: '2',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: ' Muito menos do que costumava ter'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question2',
-                        value: '3',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Quase nenhuma'
-                    },
-                    {
-                        xtype: 'label',
-                        html: '<br /><b>3.</b>Tenho-me culpado sem necessidade quando as coisas correm mal.',
-                        cls: 'questionLabel'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question3',
-                        value: '3',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, a maioria das vezes'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question3',
-                        value: '2',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, algumas vezes'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question3',
-                        value: '1',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: ' Raramente'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question3',
-                        value: '0',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Não, nunca'
-                    },
-                    {
-                        xtype: 'label',
-                        html: '<br /><b>4.</b>Tenho estado ansiosa ou preocupada sem motivo.',
-                        cls: 'questionLabel'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question4',
-                        value: '0',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Não, nunca'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question4',
-                        value: '1',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Quase nunca'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question4',
-                        value: '2',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, por vezes'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question4',
-                        value: '3',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, muitas vezes'
-                    },
-                    {
-                        xtype: 'label',
-                        html: '<br /><b>5.</b>Tenho-me sentido com medo ou muito assustada, sem motivo.',
-                        cls: 'questionLabel'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question5',
-                        value: '3',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, muitas vezes'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question5',
-                        value: '2',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, por vezes'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question5',
-                        value: '1',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Não, raramente'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question5',
-                        value: '0',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Não, nunca'
-                    },
-                    {
-                        xtype: 'label',
-                        html: '<br /><b>6.</b>Tenho sentido que são coisas demais para mim.',
-                        cls: 'questionLabel'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question6',
-                        value: '3',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, a maioria das vezes não consigo resolvê-las'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question6',
-                        value: '2',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, por vezes não tenho conseguido resolvê-las como antes'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question6',
-                        value: '1',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Não, a maioria das vezes resolvo-as facilmente'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question6',
-                        value: '0',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Não, resolvo-as tão bem como antes'
-                    },
-                    {
-                        xtype: 'label',
-                        html: '<br /><b>7.</b>Tenho-me sentido tão infeliz que durmo mal.',
-                        cls: 'questionLabel'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question7',
-                        value: '3',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, quase sempre'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question7',
-                        value: '2',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, por vezes'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question7',
-                        value: '1',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Raramente'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question7',
-                        value: '0',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Não, nunca'
-                    },
-                    {
-                        xtype: 'label',
-                        html: '<br /><b>8.</b>Tenho-me sentido triste ou muito infeliz.',
-                        cls: 'questionLabel'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question8',
-                        value: '3',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, quase sempre'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question8',
-                        value: '2',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, muitas vezes'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question8',
-                        value: '1',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Raramente'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question8',
-                        value: '0',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Não, nunca'
-                    },
-                    {
-                        xtype: 'label',
-                        html: '<br /><b>9.</b>Tenho-me sentido tão infeliz que choro.',
-                        cls: 'questionLabel'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question9',
-                        value: '3',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, quase sempre'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question9',
-                        value: '2',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, muitas vezes'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question9',
-                        value: '1',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Só às vezes'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question9',
-                        value: '0',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Não, nunca'
-                    },
-                    {
-                        xtype: 'label',
-                        html: '<br /><b>10.</b>Tive ideias de fazer mal a mim mesma.',
-                        cls: 'questionLabel'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question10',
-                        value: '3',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Sim, muitas vezes'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question10',
-                        value: '2',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Por vezes'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question10',
-                        value: '1',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Muito raramente'
-                    },
-                    {
-                        xtype: 'radiofield',
-                        name: 'question10',
-                        value: '0',
-                        cls: 'questionRadio',
-                        labelAlign: 'left',
-                        label: 'Nunca'
+                        xtype: 'fieldset',
+                        title: '<b>2.</b>Tenho tido esperança no futuro.',
+                        cls:'depressionFieldSet',
+                        items: [
+                            {
+                                xtype: 'radiofield',
+                                name: 'question2',
+                                value: '0',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Tanta como sempre tive'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question2',
+                                value: '1',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: ' Menos do que costumava ter'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question2',
+                                value: '2',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: ' Muito menos do que costumava ter'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question2',
+                                value: '3',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Quase nenhuma'
+                            }
+                        ]
                     }
                 ]
             },
@@ -75259,16 +76756,19 @@ Ext.define('MyApp.view.EscalaDepressao', {
                 xtype: 'button',
                 id: 'depressionButton',
                 ui: 'action',
-                text: 'Submeter',
+                text: 'Seguinte',
+                cls:'logInButtonCls',
                 style: 'margin-top:20px;',
                 handler: function (element) {
 
                     var result = 0,
                         bol_submit = true,
                         getChildAge = Ext.getCmp("childAgeID").getValue(),
-                        bol_childAgeFilled = true;
+                        bol_childAgeFilled = true,
+                        question1 = 0,
+                        question2 = 0;
 
-                    for (var i = 1; i < 11; i++) {
+                    for (var i = 1; i < 3; i++) {
 
                         var querySelectorID = "radiofield[name=question" + i + "]",
                             resultQuery = Ext.ComponentQuery.query(querySelectorID)[0].getGroupValue();
@@ -75294,26 +76794,14 @@ Ext.define('MyApp.view.EscalaDepressao', {
 
                         Ext.Viewport.setMasked({
                             xtype: 'loadmask',
-                            message: 'A inserir...'
+                            message: 'A guardar...'
                         });
 
-                        element.up('panel').fireEvent('onSubmitCommand', me, result, userID,getChildAge);
+                        question1 = parseInt(Ext.ComponentQuery.query("radiofield[name=question1]")[0].getGroupValue());
+                        question2 = parseInt(Ext.ComponentQuery.query("radiofield[name=question2]")[0].getGroupValue());
 
-//                    var me = element,
-//                        question10 = Ext.getCmp('question10'),
-//                        question9 = Ext.getCmp('question9'),
-//                        question10Value = question10.getValue(),
-//                        question9Value = question9.getValue();
-//
-//
-//                    console.log(question10Value);
+                        element.up('panel').fireEvent('onChangeView', getChildAge, question1, question2);
 
-                        /* var task = Ext.create('Ext.util.DelayedTask', function () {
-                         label.setHtml('');
-                         me.up().fireEvent('signInCommand', me, username, password);
-                         usernameField.setValue('');
-                         passwordField.setValue('');
-                         });*/
                     } else {
                         var str_message = "";
 
@@ -75335,6 +76823,944 @@ Ext.define('MyApp.view.EscalaDepressao', {
 
                 }
             }
+
+        ],
+        control: {
+            'button[action=backView]': {
+                tap: 'backButtonHandler'
+            }
+        },
+        listeners: [
+            {
+                delegate: '#logOffButton',
+                event: 'tap',
+                fn: 'onLogOffButtonTap'
+            }
+        ]
+    },
+    backButtonHandler: function () {
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        history.pushState(null, "");
+    },
+    onLogOffButtonTap: function () {
+        this.fireEvent('onSignOffCommand');
+    }
+});
+
+Ext.define('MyApp.view.EscalaDepressao2', {
+    extend:  Ext.form.Panel ,
+    alias: 'widget.depressionView2',
+                                                                                                                     
+    id: 'depressionViewID2',
+    config: {
+        items: [
+            {
+                title: 'Home',
+                iconCls: 'home',
+                styleHtmlContent: true,
+                scrollable: true,
+                items: [
+                    {
+                        docked: 'top',
+                        xtype: 'titlebar',
+                        cls: 'titleBar',
+                        title: 'Escala de Depressão Pós-parto',
+                        items: [
+                            {
+                                xtype: 'button',
+                                itemId: 'logOffButton',
+                                cls: "logoutButton",
+                                align: 'right'
+                            },
+                            {
+                                xtype: 'button',
+                                cls: 'bckButton',
+                                action: 'backView',
+                                align: 'left'
+                            }
+                        ]
+                    },
+                    {
+                        tabBarPosition: 'bottom',
+                        xtype: 'tabpanel',
+                        items: [
+                            {
+                                title: 'Home',
+                                iconCls: 'home',
+                                html: 'Home Screen'
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                xtype: 'fieldset',
+                id: 'depressionPanel2',
+//                maxWidth:'400px',
+                layout: {
+                    type: 'vbox'
+//                    type:'hbox'
+                },
+                items: [
+                    {
+                        xtype: 'fieldset',
+                        title: '<b>3.</b>Tenho-me culpado sem necessidade quando as coisas correm mal.',
+                        cls:'depressionFieldSet',
+                        items: [
+                            {
+                                xtype: 'radiofield',
+                                name: 'question3',
+                                value: '3',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Sim, a maioria das vezes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question3',
+                                value: '2',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Sim, algumas vezes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question3',
+                                value: '1',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: ' Raramente'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question3',
+                                value: '0',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Não, nunca'
+                            }
+                        ]
+                    },
+                    {
+                        xtype: 'fieldset',
+                        title: '<b>4.</b>Tenho estado ansiosa ou preocupada sem motivo.',
+                        cls:'depressionFieldSet',
+                        items: [
+                            {
+                                xtype: 'radiofield',
+                                name: 'question4',
+                                value: '0',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Não, nunca'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question4',
+                                value: '1',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Quase nunca'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question4',
+                                value: '2',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Sim, por vezes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question4',
+                                value: '3',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Sim, muitas vezes'
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                xtype: 'button',
+                id: 'depressionButton2',
+                ui: 'action',
+                text: 'Seguinte',
+                cls:'logInButtonCls',
+                style: 'margin-top:20px;',
+                handler: function (element) {
+
+                    var result = 0,
+                        bol_submit = true,
+                        question3 = 0,
+                        question4 = 0;
+
+                    for (var i = 3; i < 5; i++) {
+
+                        var querySelectorID = "radiofield[name=question" + i + "]",
+                            resultQuery = Ext.ComponentQuery.query(querySelectorID)[0].getGroupValue();
+
+                        if (parseInt(resultQuery) >= 0 && parseInt(resultQuery) <= 3) {
+                            result = result + parseInt(Ext.ComponentQuery.query(querySelectorID)[0].getGroupValue());
+                        } else {
+                            bol_submit = false;
+                            break;
+                        }
+
+                    }
+
+                    if (bol_submit) {
+
+                        var me = this,
+                            userID = 1;
+
+
+                        Ext.Viewport.setMasked({
+                            xtype: 'loadmask',
+                            message: 'A inserir...'
+                        });
+
+                        question3 = parseInt(Ext.ComponentQuery.query("radiofield[name=question3]")[0].getGroupValue());
+                        question4 = parseInt(Ext.ComponentQuery.query("radiofield[name=question4]")[0].getGroupValue());
+
+                        element.up('panel').fireEvent('onChangeView2', question3,question4);
+
+                    } else {
+                        var str_message = "";
+
+                        if(!bol_childAgeFilled && !bol_submit){
+                            str_message = 'Por favor, responda a todas as perguntas e preencha a idade da criança';
+//                            str_message = 'Por favor, preencha a idade da criança';
+                        }else if(!bol_submit){
+                            str_message = 'Por favor, responda a todas as perguntas';
+                        }else{
+                            str_message = 'Por favor, preencha a idade da criança';
+                        }
+
+                        Ext.device.Notification.show({
+                            title: 'Erro',
+                            buttons: Ext.MessageBox.OK,
+                            message: str_message
+                        });
+                    }
+
+                }
+            }
+
+        ],
+        control: {
+            'button[action=backView]': {
+                tap: 'backButtonHandler'
+            }
+        },
+        listeners: [
+            {
+                delegate: '#logOffButton',
+                event: 'tap',
+                fn: 'onLogOffButtonTap'
+            }
+        ]
+    },
+    backButtonHandler: function () {
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        history.pushState(null, "");
+    },
+    onLogOffButtonTap: function () {
+        this.fireEvent('onSignOffCommand');
+    }
+});
+
+Ext.define('MyApp.view.EscalaDepressao3', {
+    extend:  Ext.form.Panel ,
+    alias: 'widget.depressionView3',
+                                                                                                                     
+    id: 'depressionViewID3',
+    config: {
+        items: [
+            {
+                title: 'Home',
+                iconCls: 'home',
+                styleHtmlContent: true,
+                scrollable: true,
+                items: [
+                    {
+                        docked: 'top',
+                        xtype: 'titlebar',
+                        cls: 'titleBar',
+                        title: 'Escala de Depressão Pós-parto',
+                        items: [
+                            {
+                                xtype: 'button',
+                                itemId: 'logOffButton',
+                                cls: "logoutButton",
+                                align: 'right'
+                            },
+                            {
+                                xtype: 'button',
+                                cls: 'bckButton',
+                                action: 'backView',
+                                align: 'left'
+                            }
+                        ]
+                    },
+                    {
+                        tabBarPosition: 'bottom',
+                        xtype: 'tabpanel',
+                        items: [
+                            {
+                                title: 'Home',
+                                iconCls: 'home',
+                                html: 'Home Screen'
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                xtype: 'fieldset',
+                id: 'depressionPanel3',
+//                maxWidth:'400px',
+                layout: {
+                    type: 'vbox'
+//                    type:'hbox'
+                },
+                items: [
+                    {
+                        xtype: 'fieldset',
+                        title: '<b>5.</b>Tenho-me sentido com medo ou muito assustada, sem motivo.',
+                        cls:'depressionFieldSet',
+                        items: [
+                            {
+                                xtype: 'radiofield',
+                                name: 'question5',
+                                value: '3',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Sim, muitas vezes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question5',
+                                value: '2',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Sim, por vezes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question5',
+                                value: '1',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Não, raramente'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question5',
+                                value: '0',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Não, nunca'
+                            }
+                        ]
+                    },
+                    {
+                        xtype: 'fieldset',
+                        title: '<b>6.</b>Tenho sentido que são coisas demais para mim.',
+                        cls:'depressionFieldSet',
+                        items: [
+                            {
+                                xtype: 'radiofield',
+                                name: 'question6',
+                                value: '3',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'70%',
+                                label: 'Sim, a maioria das vezes não consigo resolvê-las'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question6',
+                                value: '2',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'70%',
+                                label: 'Sim, por vezes não tenho conseguido resolvê-las'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question6',
+                                value: '1',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'70%',
+                                label: 'Não, a maioria das vezes resolvo-as facilmente'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question6',
+                                value: '0',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'70%',
+                                label: 'Não, resolvo-as tão bem como antes'
+                            }
+                        ]
+                    }
+
+                ]
+            },
+            {
+                xtype: 'button',
+                id: 'depressionButton3',
+                ui: 'action',
+                text: 'Seguinte',
+                cls:'logInButtonCls',
+                style: 'margin-top:20px;',
+                handler: function (element) {
+
+                    var result = 0,
+                        bol_submit = true,
+                        question5 = 0,
+                        question6 = 0;
+
+                    for (var i = 5; i < 7; i++) {
+
+                        var querySelectorID = "radiofield[name=question" + i + "]",
+                            resultQuery = Ext.ComponentQuery.query(querySelectorID)[0].getGroupValue();
+
+                        if (parseInt(resultQuery) >= 0 && parseInt(resultQuery) <= 3) {
+                            result = result + parseInt(Ext.ComponentQuery.query(querySelectorID)[0].getGroupValue());
+                        } else {
+                            bol_submit = false;
+                            break;
+                        }
+
+                    }
+
+                    if (bol_submit) {
+
+                        var me = this,
+                            userID = 1;
+
+
+                        Ext.Viewport.setMasked({
+                            xtype: 'loadmask',
+                            message: 'A inserir...'
+                        });
+
+                        question5 = parseInt(Ext.ComponentQuery.query("radiofield[name=question5]")[0].getGroupValue());
+                        question6 = parseInt(Ext.ComponentQuery.query("radiofield[name=question6]")[0].getGroupValue());
+
+                        element.up('panel').fireEvent('onChangeView3', question5,question6);
+
+                    } else {
+                        var str_message = "";
+
+                        if(!bol_childAgeFilled && !bol_submit){
+                            str_message = 'Por favor, responda a todas as perguntas e preencha a idade da criança';
+//                            str_message = 'Por favor, preencha a idade da criança';
+                        }else if(!bol_submit){
+                            str_message = 'Por favor, responda a todas as perguntas';
+                        }else{
+                            str_message = 'Por favor, preencha a idade da criança';
+                        }
+
+                        Ext.device.Notification.show({
+                            title: 'Erro',
+                            buttons: Ext.MessageBox.OK,
+                            message: str_message
+                        });
+                    }
+
+                }
+            }
+
+        ],
+        control: {
+            'button[action=backView]': {
+                tap: 'backButtonHandler'
+            }
+        },
+        listeners: [
+            {
+                delegate: '#logOffButton',
+                event: 'tap',
+                fn: 'onLogOffButtonTap'
+            }
+        ]
+    },
+    backButtonHandler: function () {
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        history.pushState(null, "");
+    },
+    onLogOffButtonTap: function () {
+        this.fireEvent('onSignOffCommand');
+    }
+});
+
+Ext.define('MyApp.view.EscalaDepressao4', {
+    extend:  Ext.form.Panel ,
+    alias: 'widget.depressionView4',
+                                                                                                                     
+    id: 'depressionViewID4',
+    config: {
+        items: [
+            {
+                title: 'Home',
+                iconCls: 'home',
+                styleHtmlContent: true,
+                scrollable: true,
+                items: [
+                    {
+                        docked: 'top',
+                        xtype: 'titlebar',
+                        cls: 'titleBar',
+                        title: 'Escala de Depressão Pós-parto',
+                        items: [
+                            {
+                                xtype: 'button',
+                                itemId: 'logOffButton',
+                                cls: "logoutButton",
+                                align: 'right'
+                            },
+                            {
+                                xtype: 'button',
+                                cls: 'bckButton',
+                                action: 'backView',
+                                align: 'left'
+                            }
+                        ]
+                    },
+                    {
+                        tabBarPosition: 'bottom',
+                        xtype: 'tabpanel',
+                        items: [
+                            {
+                                title: 'Home',
+                                iconCls: 'home',
+                                html: 'Home Screen'
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                xtype: 'fieldset',
+                id: 'depressionPanel4',
+//                maxWidth:'400px',
+                layout: {
+                    type: 'vbox'
+//                    type:'hbox'
+                },
+                items: [
+                    {
+                        xtype: 'fieldset',
+                        title: '<b>7.</b>Tenho-me sentido tão infeliz que durmo mal.',
+                        cls:'depressionFieldSet',
+                        items: [
+                            {
+                                xtype: 'radiofield',
+                                name: 'question7',
+                                value: '3',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Sim, quase sempre'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question7',
+                                value: '2',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Sim, por vezes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question7',
+                                value: '1',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Raramente'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question7',
+                                value: '0',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Não, nunca'
+                            }
+                        ]
+                    },
+
+                    {
+                        xtype: 'fieldset',
+                        title: '<b>8.</b>Tenho-me sentido triste ou muito infeliz.',
+                        cls:'depressionFieldSet',
+                        items: [
+                            {
+                                xtype: 'radiofield',
+                                name: 'question8',
+                                value: '3',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Sim, quase sempre'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question8',
+                                value: '2',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Sim, muitas vezes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question8',
+                                value: '1',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Raramente'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question8',
+                                value: '0',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Não, nunca'
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                xtype: 'button',
+                id: 'depressionButton4',
+                ui: 'action',
+                text: 'Seguinte',
+                cls:'logInButtonCls',
+                style: 'margin-top:20px;',
+                handler: function (element) {
+
+                    var result = 0,
+                        bol_submit = true,
+                        question7 = 0,
+                        question8 = 0;
+
+                    for (var i = 7; i < 9; i++) {
+
+                        var querySelectorID = "radiofield[name=question" + i + "]",
+                            resultQuery = Ext.ComponentQuery.query(querySelectorID)[0].getGroupValue();
+
+                        if (parseInt(resultQuery) >= 0 && parseInt(resultQuery) <= 3) {
+                            result = result + parseInt(Ext.ComponentQuery.query(querySelectorID)[0].getGroupValue());
+                        } else {
+                            bol_submit = false;
+                            break;
+                        }
+
+                    }
+
+                    if (bol_submit) {
+
+                        var me = this,
+                            userID = 1;
+
+
+                        Ext.Viewport.setMasked({
+                            xtype: 'loadmask',
+                            message: 'A inserir...'
+                        });
+
+                        question7 = parseInt(Ext.ComponentQuery.query("radiofield[name=question7]")[0].getGroupValue());
+                        question8 = parseInt(Ext.ComponentQuery.query("radiofield[name=question8]")[0].getGroupValue());
+
+                        element.up('panel').fireEvent('onChangeView4', question7,question8);
+
+                    } else {
+                        var str_message = "";
+
+                        if(!bol_childAgeFilled && !bol_submit){
+                            str_message = 'Por favor, responda a todas as perguntas e preencha a idade da criança';
+//                            str_message = 'Por favor, preencha a idade da criança';
+                        }else if(!bol_submit){
+                            str_message = 'Por favor, responda a todas as perguntas';
+                        }else{
+                            str_message = 'Por favor, preencha a idade da criança';
+                        }
+
+                        Ext.device.Notification.show({
+                            title: 'Erro',
+                            buttons: Ext.MessageBox.OK,
+                            message: str_message
+                        });
+                    }
+
+                }
+            }
+
+        ],
+        control: {
+            'button[action=backView]': {
+                tap: 'backButtonHandler'
+            }
+        },
+        listeners: [
+            {
+                delegate: '#logOffButton',
+                event: 'tap',
+                fn: 'onLogOffButtonTap'
+            }
+        ]
+    },
+    backButtonHandler: function () {
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        history.pushState(null, "");
+    },
+    onLogOffButtonTap: function () {
+        this.fireEvent('onSignOffCommand');
+    }
+});
+
+Ext.define('MyApp.view.EscalaDepressao5', {
+    extend:  Ext.form.Panel ,
+    alias: 'widget.depressionView5',
+                                                                                                                     
+    id: 'depressionViewID5',
+    config: {
+        items: [
+            {
+                title: 'Home',
+                iconCls: 'home',
+                styleHtmlContent: true,
+                scrollable: true,
+                items: [
+                    {
+                        docked: 'top',
+                        xtype: 'titlebar',
+                        cls: 'titleBar',
+                        title: 'Escala de Depressão Pós-parto',
+                        items: [
+                            {
+                                xtype: 'button',
+                                itemId: 'logOffButton',
+                                cls: "logoutButton",
+                                align: 'right'
+                            },
+                            {
+                                xtype: 'button',
+                                cls: 'bckButton',
+                                action: 'backView',
+                                align: 'left'
+                            }
+                        ]
+                    },
+                    {
+                        tabBarPosition: 'bottom',
+                        xtype: 'tabpanel',
+                        items: [
+                            {
+                                title: 'Home',
+                                iconCls: 'home',
+                                html: 'Home Screen'
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                xtype: 'fieldset',
+                id: 'depressionPanel5',
+//                maxWidth:'400px',
+                layout: {
+                    type: 'vbox'
+//                    type:'hbox'
+                },
+                items: [
+                    {
+                        xtype: 'fieldset',
+                        title: '<b>9.</b>Tenho-me sentido tão infeliz que choro.',
+                        cls:'depressionFieldSet',
+                        items: [
+                            {
+                                xtype: 'radiofield',
+                                name: 'question9',
+                                value: '3',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Sim, quase sempre'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question9',
+                                value: '2',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Sim, muitas vezes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question9',
+                                value: '1',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Só às vezes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question9',
+                                value: '0',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Não, nunca'
+                            }
+                        ]
+                    },
+
+                    {
+                        xtype: 'fieldset',
+                        title: '<b>10.</b>Tive ideias de fazer mal a mim mesma.',
+                        cls:'depressionFieldSet',
+                        items: [
+                            {
+                                xtype: 'radiofield',
+                                name: 'question10',
+                                value: '3',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Sim, muitas vezes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question10',
+                                value: '2',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Por vezes'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question10',
+                                value: '1',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Muito raramente'
+                            },
+                            {
+                                xtype: 'radiofield',
+                                name: 'question10',
+                                value: '0',
+                                cls: 'questionRadio',
+                                labelAlign: 'left',
+                                labelWidth:'80%',
+                                label: 'Nunca'
+                            }
+                        ]
+                    }
+
+                ]
+            },
+            {
+                xtype: 'button',
+                id: 'depressionButton5',
+                ui: 'action',
+                text: 'Submeter',
+                cls:'logInButtonCls',
+                style: 'margin-top:20px;',
+                handler: function (element) {
+
+                    var result = 0,
+                        bol_submit = true,
+                        getChildAge = localStorage.getItem("childAge"),
+                        bol_childAgeFilled = true,
+                        question9 = 0,
+                        question10 = 0;
+
+
+
+                    localStorage.setItem("question9",parseInt(Ext.ComponentQuery.query("radiofield[name=question9]")[0].getGroupValue()));
+                    localStorage.setItem("question10", parseInt(Ext.ComponentQuery.query("radiofield[name=question10]")[0].getGroupValue()));
+
+                    for (var i = 1; i < 11; i++) {
+
+                        var querySelectorID2 = "question" + i,
+                            resultQuery3 = localStorage.getItem(querySelectorID2);
+
+                        if (parseInt(resultQuery3) >= 0 && parseInt(resultQuery3) <= 3) {
+                            result = result + parseInt(localStorage.getItem(querySelectorID2));
+                        } else {
+                            bol_submit = false;
+                            break;
+                        }
+                    }
+
+                    if (getChildAge == "") {
+                        bol_childAgeFilled = false;
+                    }
+
+                    if (bol_submit && bol_childAgeFilled) {
+
+                        var me = this,
+                            userID = 1;
+
+                        Ext.Viewport.setMasked({
+                            xtype: 'loadmask',
+                            message: 'A inserir...'
+                        });
+
+                        element.up('panel').fireEvent('onSubmitCommand', me, result, userID,getChildAge);
+
+                    } else {
+                        var str_message = "";
+
+                        if(!bol_childAgeFilled && !bol_submit){
+                            str_message = 'Por favor, responda a todas as perguntas e preencha a idade da criança';
+                        }else if(!bol_submit){
+                            str_message = 'Por favor, responda a todas as perguntas';
+                        }else{
+                            str_message = 'Por favor, preencha a idade da criança';
+                        }
+
+                        Ext.device.Notification.show({
+                            title: 'Erro',
+                            buttons: Ext.MessageBox.OK,
+                            message: str_message
+                        });
+                    }
+
+                }
+            }
+
         ],
         control: {
             'button[action=backView]': {
@@ -75623,37 +78049,35 @@ Ext.define('MyApp.view.AdminSelScales', {
 Ext.define('MyApp.view.Login', {
     extend:  Ext.form.Panel ,
     alias: "widget.loginView",
-    id:'loginViewID',
-                                                                                                                                                 
+    id: 'loginViewID',
+                                                                                                                                                    
     config: {
         title: 'Login',
-        submitOnAction:true,
         items: [
             {
                 xtype: 'image',
                 src: 'resources/images/simasLogo.png',
-                cls:'logo'
+                cls: 'logo'
             },
             {
                 xtype: 'fieldset',
-                id:'loginFormID',
-                name:'loginForm',
+                id: 'loginFormID',
+                name: 'loginForm',
+                submitOnAction: false,
                 items: [
                     {
                         xtype: 'textfield',
                         placeHolder: 'username',
                         id: 'userNameTextField',
-                        submitOnAction:false,
-                        clearIcon : false,
+                        clearIcon: false,
                         name: 'userNameTextField',
                         required: true
                     },
                     {
                         xtype: 'passwordfield',
                         placeHolder: 'password',
-                        submitOnAction:false,
                         id: 'passwordTextField',
-                        clearIcon : false,
+                        clearIcon: false,
                         name: 'passwordTextField',
                         required: true
                     }
@@ -75672,43 +78096,25 @@ Ext.define('MyApp.view.Login', {
                 xtype: 'button',
                 id: 'logInButton',
                 ui: 'action',
+                style: 'margin-top:30px',
                 padding: '10px',
-                text: 'Log In',
-                handler: function (element) {
-
-                    var me = element,
-                        usernameField = Ext.getCmp('userNameTextField'),
-                        passwordField = Ext.getCmp('passwordTextField'),
-                        label = Ext.getCmp('signInFailedLabel'),
-                        username = usernameField.getValue(),
-                        password = passwordField.getValue();
-
-                    label.hide();
-
-                    var task = Ext.create('Ext.util.DelayedTask', function () {
-                        label.setHtml('');
-                        me.up().fireEvent('signInCommand', me, username, password);
-//                        usernameField.setValue('');
-//                        passwordField.setValue('');
-                    });
-
-                    task.delay(500);
-                }
+                text: 'Log In'
             }
+
         ],
         control: {
-            'logInButton': {
+            '#logInButton': {
                 tap: 'onLogInButtonTap'
             },
-            'fieldset[name=loginForm]': {
-                action: 'onLogInButtonTap'
-            },
-            'loginFormID': {
+            '#loginFormID': {
                 action: 'onLogInButtonTap'
             }
         }
     },
     initialize: function () {
+
+        this.callParent(arguments);
+
         if (localStorage.getItem("loginstatus")) {
             app.getController('Login').signInSuccess();
         }
@@ -75719,6 +78125,27 @@ Ext.define('MyApp.view.Login', {
         } else {
             app.isOnline = true;
         }
+
+    },
+    onLogInButtonTap: function (element) {
+
+        console.log("chega");
+
+        var me = this,
+            usernameField = Ext.getCmp('userNameTextField'),
+            passwordField = Ext.getCmp('passwordTextField'),
+            label = Ext.getCmp('signInFailedLabel'),
+            username = usernameField.getValue(),
+            password = passwordField.getValue();
+
+        label.hide();
+
+        var task = Ext.create('Ext.util.DelayedTask', function () {
+            label.setHtml('');
+            me.fireEvent('signInCommand', me, username, password);
+        });
+
+        task.delay(500);
 
     },
     showSignInFailedMessage: function (message) {
@@ -75836,6 +78263,18 @@ Ext.define('MyApp.controller.Login', {
         localStorage.removeItem("username");
         localStorage.removeItem("userID");
         localStorage.removeItem("userType");
+        localStorage.removeItem("question1");
+        localStorage.removeItem("question2");
+        localStorage.removeItem("question3");
+        localStorage.removeItem("question4");
+        localStorage.removeItem("question5");
+        localStorage.removeItem("question6");
+        localStorage.removeItem("question7");
+        localStorage.removeItem("question8");
+        localStorage.removeItem("question9");
+        localStorage.removeItem("question10");
+        localStorage.removeItem("childAge");
+
 
     }
 });
@@ -76183,10 +78622,26 @@ Ext.define('MyApp.controller.EscalaDepressao', {
     extend:  Ext.app.Controller ,
     config: {
         refs: {
-            depressionView: 'depressionView'
+            depressionView: 'depressionView',
+            depressionView2: 'depressionView2',
+            depressionView3: 'depressionView3',
+            depressionView4: 'depressionView4',
+            depressionView5: 'depressionView5'
         },
         control: {
             depressionView: {
+                onChangeView: 'onChangeView'
+            },
+            depressionView2: {
+                onChangeView2: 'onChangeView2'
+            },
+            depressionView3: {
+                onChangeView3: 'onChangeView3'
+            },
+            depressionView4: {
+                onChangeView4: 'onChangeView4'
+            },
+            depressionView5: {
                 onSubmitCommand: 'onSubmitCommand'
             }
         }
@@ -76246,7 +78701,46 @@ Ext.define('MyApp.controller.EscalaDepressao', {
 //                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
+    },
+
+    onChangeView: function (childAge,question1,question2) {
+
+        localStorage.setItem("childAge", childAge);
+        localStorage.setItem("question1", question1);
+        localStorage.setItem("question2", question2);
+
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('depressionView2'));
+        Ext.Viewport.setMasked(false);
+
+    },
+    onChangeView2: function (question3,question4) {
+
+        localStorage.setItem("question3", question3);
+        localStorage.setItem("question4", question4);
+
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('depressionView3'));
+        Ext.Viewport.setMasked(false);
+
+    },
+    onChangeView3: function (question5,question6) {
+
+        localStorage.setItem("question5", question5);
+        localStorage.setItem("question6", question6);
+
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('depressionView4'));
+        Ext.Viewport.setMasked(false);
+
+    },
+    onChangeView4: function (question7,question8) {
+
+        localStorage.setItem("question7", question7);
+        localStorage.setItem("question8", question8);
+
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('depressionView5'));
+        Ext.Viewport.setMasked(false);
+
     }
+
 });
 
 /*
@@ -76280,7 +78774,11 @@ Ext.application({
         'EscalaSmiles',
         'EscalaVerbal',
         'AdminSelScales',
-        'EscalaDepressao'
+        'EscalaDepressao',
+        'EscalaDepressao2',
+        'EscalaDepressao3',
+        'EscalaDepressao4',
+        'EscalaDepressao5'
     ],
 
     controllers: ['Login', 'EscalaNumerica', 'EscalaVisual', 'EscalaSmiles', 'EscalaVerbal', 'EscalaDepressao'],
@@ -76319,7 +78817,11 @@ Ext.application({
                     {'xtype': 'visualScale'},
                     {'xtype': 'smilesScale'},
                     {'xtype': 'verbalScale'},
-                    {'xtype': 'depressionView'}
+                    {'xtype': 'depressionView'},
+                    {'xtype': 'depressionView2'},
+                    {'xtype': 'depressionView3'},
+                    {'xtype': 'depressionView4'},
+                    {'xtype': 'depressionView5'}
                 ]);
             } else if (localStorage.getItem("userType") == 'd') {
                 Ext.Viewport.add([
