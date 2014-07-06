@@ -75916,7 +75916,11 @@ Ext.define('MyApp.view.EscalaNumerica', {
     },
     backButtonHandler: function () {
         Ext.getCmp('dataViewAllResultsID').getStore().load();
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        if (localStorage.getItem("userType") === 'd') {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
+        } else {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        }
         history.pushState(null, "");
     },
     onLogOffButtonTap: function () {
@@ -76021,7 +76025,11 @@ Ext.define('MyApp.view.EscalaVisual', {
         ]
     },
     backButtonHandler: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        if (localStorage.getItem("userType") === 'd') {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
+        } else {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        }
         history.pushState(null, "");
     },
     onLogOffButtonTap: function () {
@@ -76259,7 +76267,11 @@ Ext.define('MyApp.view.EscalaSmiles', {
 //        alert('o:' + orientation + ' w:' + width + ' h:' + height);
     },
     backButtonHandler: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        if (localStorage.getItem("doctorID") === 'd') {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
+        } else {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        }
         history.pushState(null, "");
     },
     onLogOffButtonTap: function () {
@@ -76590,7 +76602,11 @@ Ext.define('MyApp.view.EscalaVerbal', {
         }
     },
     backButtonHandler: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        if (localStorage.getItem("userType") === 'd') {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
+        } else {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        }
         history.pushState(null, "");
     },
     onLogOffButtonTap: function () {
@@ -76839,7 +76855,12 @@ Ext.define('MyApp.view.EscalaDepressao', {
         ]
     },
     backButtonHandler: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        if (localStorage.getItem("userType") === 'd') {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
+        } else {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        }
+
         history.pushState(null, "");
     },
     onLogOffButtonTap: function () {
@@ -77071,7 +77092,11 @@ Ext.define('MyApp.view.EscalaDepressao2', {
         ]
     },
     backButtonHandler: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        if (localStorage.getItem("userType") === 'd') {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
+        } else {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        }
         history.pushState(null, "");
     },
     onLogOffButtonTap: function () {
@@ -77304,7 +77329,11 @@ Ext.define('MyApp.view.EscalaDepressao3', {
         ]
     },
     backButtonHandler: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        if (localStorage.getItem("userType") === 'd') {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
+        } else {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        }
         history.pushState(null, "");
     },
     onLogOffButtonTap: function () {
@@ -77537,7 +77566,11 @@ Ext.define('MyApp.view.EscalaDepressao4', {
         ]
     },
     backButtonHandler: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        if (localStorage.getItem("userType") === 'd') {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
+        } else {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        }
         history.pushState(null, "");
     },
     onLogOffButtonTap: function () {
@@ -77776,7 +77809,11 @@ Ext.define('MyApp.view.EscalaDepressao5', {
         ]
     },
     backButtonHandler: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        if (localStorage.getItem("userType") === 'd') {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
+        } else {
+            Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuView'));
+        }
         history.pushState(null, "");
     },
     onLogOffButtonTap: function () {
@@ -77791,7 +77828,7 @@ var userID = 0;
 Ext.define('MyApp.view.DoctorAdmin', {
     extend:  Ext.form.Panel ,
     alias: 'widget.doctorAdmin',
-                                                                                                     
+                                                                                                       
     config: {
         tabBarPosition: 'bottom',
         items: [
@@ -77805,14 +77842,14 @@ Ext.define('MyApp.view.DoctorAdmin', {
                     {
                         docked: 'top',
                         xtype: 'titlebar',
-                        cls:'titleBar',
+                        cls: 'titleBar',
                         title: 'Listagem utente/escala',
 
                         items: [
                             {
                                 xtype: 'button',
                                 itemId: 'logOffButton',
-                                cls:"logoutButton",
+                                cls: "logoutButton",
                                 align: 'right'
                             }
                         ]
@@ -77821,7 +77858,7 @@ Ext.define('MyApp.view.DoctorAdmin', {
             },
             {
                 xtype: 'dataview',
-                id:'userDoctorID',
+                id: 'userDoctorID',
                 masked: {
                     xtype: 'loadmask',
                     message: 'A carregar a sua lista...'
@@ -77831,7 +77868,7 @@ Ext.define('MyApp.view.DoctorAdmin', {
                     fields: ['id', 'name', 'tablename'],
                     proxy: {
                         type: 'jsonp',
-                        url: 'http://www.antonio-ramos.com/sencha/php/getUserDoctor.php?doctorID=' + localStorage.getItem("userID"),
+                        url: 'http://www.antonio-ramos.com/sencha/php/getUserDoctor.php?doctorID=' + localStorage.getItem("doctorID"),
                         reader: {
                             type: 'json',
                             rootProperty: 'data'
@@ -77839,15 +77876,66 @@ Ext.define('MyApp.view.DoctorAdmin', {
                     }
                 },
                 height: 272,
-                itemTpl:'<tpl for="."><div class="logentry" data-userID="{id}" style="width: 100%"><span style="display:block;width:50%;float:left;text-align: left">{name}</span><span style="display:block;width:50%;float:right;text-align: right">{tablename}</span></div></tpl>',
+                itemTpl: '<tpl for="."><div class="logentry" data-userID="{id}" style="width: 100%"><span style="display:block;width:50%;float:left;text-align: left">{name}</span><span style="display:block;width:50%;float:right;text-align: right">{tablename}</span></div></tpl>',
                 trackOver: true,
                 listeners: {
-                    'select': function(view, record, item, idx, event, opts) {
+                    'select': function (view, record, item, idx, event, opts) {
 
                         userID = record.data.id;
+                        localStorage.setItem("userID", record.data.id);
+                        localStorage.setItem("userID", record.data.id);
+                        console.log("localStorage:" + localStorage.getItem("userID") + "|record:" + record.data.id);
 
-                        Ext.Viewport.setActiveItem(Ext.Viewport.down('adminSelectScales'));
-                        history.pushState(null, "");
+                        Ext.device.Notification.show({
+                            title: 'Irá entrar em modo utente',
+                            buttons: [
+                                {text: 'Alterar', itemId: 'alterar', ui: 'action'},
+                                {text: 'Adicionar', itemId: 'verDados', ui: 'action'},
+                                {text: 'Nada', itemId: 'no'}
+                            ],
+                            message: 'Escolha uma das seguintes opções:',
+                            callback: function (button) {
+                                if (button === "alterar") {
+
+                                    Ext.Viewport.setActiveItem(Ext.Viewport.down('adminSelectScales'));
+                                    history.pushState(null, "");
+
+                                } else if (button === "verDados") {
+
+                                    if (Ext.Viewport.down('mainMenuViewSimple') === null) {
+
+                                        Ext.Viewport.add([
+                                            {'xtype': 'numericScale'},
+                                            {'xtype': 'visualScale'},
+                                            {'xtype': 'smilesScale'},
+                                            {'xtype': 'verbalScale'},
+                                            {'xtype': 'depressionView'},
+                                            {'xtype': 'depressionView2'},
+                                            {'xtype': 'depressionView3'},
+                                            {'xtype': 'depressionView4'},
+                                            {'xtype': 'depressionView5'}
+                                        ]);
+
+                                    }else{
+                                        Ext.Viewport.down('mainMenuViewSimple').destroy();
+                                    }
+
+                                    Ext.Viewport.add([
+                                        {'xtype': 'mainMenuViewSimple'}
+                                    ]);
+
+                                    Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
+                                    Ext.getCmp('dataViewAllResultsID').getStore().getProxy().setUrl('http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID"));
+                                    Ext.getCmp('dataViewAllResultsID').getStore().load();
+
+                                } else {
+                                    Ext.getCmp("userDoctorID").deselectAll();
+                                }
+                            }
+                        });
+
+                        /*Ext.Viewport.setActiveItem(Ext.Viewport.down('adminSelectScales'));
+                         history.pushState(null, "");*/
                     }
                 }
             }
@@ -77864,6 +77952,269 @@ Ext.define('MyApp.view.DoctorAdmin', {
         this.fireEvent('onSignOffCommand');
     }
 });
+
+
+var userItems = [
+    {
+        title: 'Home',
+        iconCls: 'home',
+        layout:{
+            type: 'hbox',
+            pack: 'center',
+            align: 'center'
+        },
+        items: [
+            {
+                docked: 'top',
+                xtype: 'titlebar',
+                cls: 'titleBar',
+                title: 'SIMAS',
+                items: [
+                    {
+                        xtype: 'button',
+                        cls: 'bckButton',
+                        action: 'backView',
+                        align: 'left'
+                    },
+                    {
+                        xtype: 'button',
+                        itemId: 'logOffButton',
+                        align: 'right',
+                        cls: "logoutButton"
+                    }
+                ]
+            },
+            {
+                xtype: 'button',
+                ui: 'normal',
+                cls: 'newScale',
+                action: 'push-view_0'
+            }
+
+        ]
+    },
+    {
+        title: 'Registos',
+        iconCls: 'time',
+        items: [
+            {
+                docked: 'top',
+                xtype: 'titlebar',
+                cls: 'titleBar',
+                title: 'Registos pessoais',
+                items: [
+                    {
+                        xtype: 'button',
+                        cls: 'bckButton',
+                        action: 'backView',
+                        align: 'left'
+                    },
+                    {
+                        xtype: 'button',
+                        itemId: 'logOffButton',
+                        align: 'right',
+                        cls: "logoutButton"
+                    }
+                ]
+            },
+            {
+                xtype: 'list',
+                id: 'dataViewAllResultsID',
+                cls:'simasListResults',
+                grouped: true,
+                html: '<div class="dataViewHeader"><div>Data</div><div>Escala</div><div>Valor</div></div>',
+                masked: {
+                    xtype: 'loadmask',
+                    message: 'A carregar a sua lista...'
+                },
+                store: {
+                    autoLoad: true,
+                    clearOnLoad:true,
+                    sorters: [
+                        {
+                            property: 'hora',
+                            direction: 'DESC'
+                        }
+                    ],
+                    fields: ['dia', 'hora', 'table', 'amount'],
+                    grouper: {
+                        sortProperty: 'dia',
+                        direction: 'DESC',
+                        groupFn: function (item) {
+                            return item.get('dia');
+                        }
+                    },
+                    proxy: {
+                        type: 'jsonp',
+                        useDefaultXhrHeader: false,
+                        disableCaching: true,
+                        url: 'http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID"),
+                        reader: {
+                            type: 'json',
+                            rootProperty: 'data'
+                        }
+                    }
+                },
+                height: 1500,
+                itemTpl: '<div class="dataItem" style="width: 100%"><div style="width: 33%;float:left;">{hora}</div><div style="width: 33%;float:left;">{table}</div><div style="width: 33%;float:left;">{amount}</div></div>',
+                trackOver: true
+            },
+            {
+                xtype: 'titlebar',
+                docked: 'top',
+                ui: 'neutral',
+                id: 'filterTitleBar',
+                items: [
+                    {
+                        xtype: 'selectfield',
+                        label: 'Filtrar por',
+                        labelWrap:true,
+                        minWidth:'300px',
+                        id: 'filterSelectID',
+                        align: 'right',
+                        options: [
+                            { text: 'Nada', value: 'none'  },
+                            { text: 'Numérica', value: 'Numérica'  },
+                            { text: 'Verbal', value: 'Verbal' },
+                            { text: 'Analógica', value: 'Analógica'  },
+                            { text: 'Smiles', value: 'Smiles'  },
+                            { text: 'Depressão', value: 'Depressão'  }
+                        ],
+                        listeners: {
+                            change: function () {
+                                var sto = Ext.getCmp('dataViewAllResultsID').getStore(),
+                                    selectValue = Ext.getCmp('filterSelectID').getValue();
+
+                                if (selectValue == "none") {
+                                    Ext.getCmp('dataViewAllResultsID').getStore().clearFilter();
+                                } else {
+                                    sto.clearFilter();
+                                    sto.filter('table', selectValue);
+                                }
+                            }
+                        }
+                    },
+                    {
+                        text: 'Limpar filtros',
+                        ui: 'decline',
+                        align: 'right',
+                        handler: function () {
+                            Ext.getCmp('dataViewAllResultsID').getStore().clearFilter();
+                            Ext.getCmp('filterSelectID').setValue("none");
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+];
+
+Ext.define('MyApp.view.MainSimple', {
+    extend:  Ext.tab.Panel ,
+    alias: 'widget.mainMenuViewSimple',
+                                                                                                                                
+    config: {
+        tabBarPosition: 'bottom',
+        itemId: 'configPanel',
+        layout: 'card',
+        items: userItems,
+        control: {
+            '#logOffButton': {
+                tap: 'onLogOffButtonTap'
+            },
+            'button[action=push-view_0]': {
+                tap: 'pushViewFunction_0'
+            },
+            'button[action=backView]': {
+                tap: 'backButtonHandler'
+            }
+        }
+    },
+    backButtonHandler: function () {
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('doctorAdmin'));
+        history.pushState(null, "");
+    },
+    onLogOffButtonTap: function () {
+        this.fireEvent('onSignOffCommand');
+    },
+    pushViewFunction_0: function (userID) {
+
+        var me = this;
+
+        Ext.Viewport.setMasked({
+            xtype: 'loadmask',
+            message: 'A inserir...'
+        });
+
+        Ext.Ajax.request({
+            url: 'http://www.antonio-ramos.com/sencha/php/getScaleType.php',
+            method: 'post',
+            useDefaultXhrHeader: false,
+            params: {
+                userID: localStorage.getItem("userID")
+            },
+            success: function (response) {
+
+                switch (response.responseText) {
+                    case "tablevisual":
+                        Ext.Viewport.setActiveItem(Ext.Viewport.down('visualScale'));
+                        history.pushState(null, "");
+                        break;
+                    case "tablesmiles":
+                        Ext.Viewport.setActiveItem(Ext.Viewport.down('smilesScale'));
+                        history.pushState(null, "");
+                        break;
+                    case "tablenumeric":
+                        Ext.Viewport.setActiveItem(Ext.Viewport.down('numericScale'));
+                        history.pushState(null, "");
+                        break;
+                    case "tableverbal":
+                        Ext.Viewport.setActiveItem(Ext.Viewport.down('verbalScale'));
+                        history.pushState(null, "");
+                        break;
+                    case "tabledepression":
+                        Ext.Viewport.setActiveItem(Ext.Viewport.down('depressionView'));
+                        history.pushState(null, "");
+                        break;
+                    default:
+                        Ext.device.Notification.show({
+                            buttons: Ext.MessageBox.OK,
+                            message: 'Esta é a sua primeira inserção. Escolha no menu lateral a escala pretendida...'
+                        });
+                }
+
+                Ext.Viewport.setMasked(false);
+            },
+            failure: function (response, opts) {
+
+                Ext.Viewport.setMasked(false);
+
+                Ext.device.Notification.show({
+                    title: 'Erro',
+                    buttons: Ext.MessageBox.OK,
+                    message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
+                });
+            }
+        });
+    },
+    pushViewFunction_1: function () {
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('numericScale'));
+        history.pushState(null, "");
+    },
+    pushViewFunction_2: function () {
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('verbalScale'));
+        history.pushState(null, "");
+    },
+    pushViewFunction_3: function () {
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('visualScale'));
+        history.pushState(null, "");
+    },
+    pushViewFunction_4: function () {
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('smilesScale'));
+        history.pushState(null, "");
+    }
+});
+
 
 
 Ext.define('MyApp.view.AdminSelScales', {
@@ -77963,6 +78314,7 @@ Ext.define('MyApp.view.AdminSelScales', {
     },
     backButtonHandler: function () {
         Ext.getCmp('userDoctorID').getStore().load();
+        Ext.getCmp("userDoctorID").deselectAll();
         Ext.Viewport.setActiveItem(Ext.Viewport.down('doctorAdmin'));
         history.pushState(null, "");
     },
@@ -78013,15 +78365,12 @@ Ext.define('MyApp.view.AdminSelScales', {
                             buttons: Ext.MessageBox.OK,
                             message: 'A escala do utente foi alterada com sucesso'
                         });
-//                        Ext.Msg.alert('Informação', 'A escala do utente foi alterada com sucesso');
-//                    Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
                     } else {
                         Ext.device.Notification.show({
                              title: 'Erro',
                              buttons: Ext.MessageBox.OK,
                              message: 'Houve um erro ao alterar a sua escala'
                          });
-//                        Ext.Msg.alert('Informação', 'Houve um erro ao alterar a escala');
                     }
                     Ext.Viewport.setMasked(false);
                 },
@@ -78034,7 +78383,6 @@ Ext.define('MyApp.view.AdminSelScales', {
                         buttons: Ext.MessageBox.OK,
                         message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
                     });
-//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
                 }
             });
         }
@@ -78129,8 +78477,6 @@ Ext.define('MyApp.view.Login', {
     },
     onLogInButtonTap: function (element) {
 
-        console.log("chega");
-
         var me = this,
             usernameField = Ext.getCmp('userNameTextField'),
             passwordField = Ext.getCmp('passwordTextField'),
@@ -78162,13 +78508,14 @@ Ext.define('MyApp.controller.Login', {
         refs: {
             loginView: 'loginView',
             mainMenuView: 'mainMenuView',
-            numericScale:'numericScale',
-            smilesScale:'smilesScale',
-            verbalScale:'verbalScale',
-            visualScale:'visualScale',
-            doctorAdmin:'doctorAdmin',
-            adminSelectScales:'adminSelectScales',
-            depressionView:'depressionView'
+            numericScale: 'numericScale',
+            smilesScale: 'smilesScale',
+            verbalScale: 'verbalScale',
+            visualScale: 'visualScale',
+            doctorAdmin: 'doctorAdmin',
+            adminSelectScales: 'adminSelectScales',
+            depressionView: 'depressionView',
+            mainSimple: 'mainSimple'
         },
         control: {
             loginView: {
@@ -78180,22 +78527,22 @@ Ext.define('MyApp.controller.Login', {
             numericScale: {
                 onSignOffCommand: 'onSignOffCommand'
             },
-            smilesScale:{
+            smilesScale: {
                 onSignOffCommand: 'onSignOffCommand'
             },
-            verbalScale:{
+            verbalScale: {
                 onSignOffCommand: 'onSignOffCommand'
             },
-            visualScale:{
+            visualScale: {
                 onSignOffCommand: 'onSignOffCommand'
             },
-            doctorAdmin:{
+            doctorAdmin: {
                 onSignOffCommand: 'onSignOffCommand'
             },
-            adminSelectScales:{
+            adminSelectScales: {
                 onSignOffCommand: 'onSignOffCommand'
             },
-            depressionView:{
+            depressionView: {
                 onSignOffCommand: 'onSignOffCommand'
             }
         }
@@ -78229,16 +78576,24 @@ Ext.define('MyApp.controller.Login', {
                 var loginResponse = Ext.JSON.decode(response.responseText).loginStatus;
 
                 if (loginResponse) {
+
+                    if (Ext.JSON.decode(response.responseText).userType === 'd') {
+                        localStorage.setItem("doctorID", Ext.JSON.decode(response.responseText).userID);
+                    } else {
+                        localStorage.setItem("userID", Ext.JSON.decode(response.responseText).userID);
+                    }
+
                     localStorage.setItem("loginstatus", true);
                     localStorage.setItem("username", username);
                     localStorage.setItem("userID", Ext.JSON.decode(response.responseText).userID);
                     localStorage.setItem("userType", Ext.JSON.decode(response.responseText).userType);
                     me.signInSuccess();
+
                 } else {
                     me.signInFailure('Ocorreu uma falha no login. Por favor, tente novamente.');
                 }
             },
-            failure: function(response, opts) {
+            failure: function (response, opts) {
                 me.signInFailure('Erro de comunicação. Por favor, verifique a sua ligação à internet.');
 //                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
@@ -78262,6 +78617,7 @@ Ext.define('MyApp.controller.Login', {
         localStorage.removeItem("loginstatus");
         localStorage.removeItem("username");
         localStorage.removeItem("userID");
+        localStorage.removeItem("doctorID");
         localStorage.removeItem("userType");
         localStorage.removeItem("question1");
         localStorage.removeItem("question2");
@@ -78759,7 +79115,8 @@ Ext.application({
     name: 'MyApp',
 
                
-                        
+                         
+                                 
       
 
     isOnline: false,
@@ -78778,7 +79135,8 @@ Ext.application({
         'EscalaDepressao2',
         'EscalaDepressao3',
         'EscalaDepressao4',
-        'EscalaDepressao5'
+        'EscalaDepressao5',
+        'MainSimple'
     ],
 
     controllers: ['Login', 'EscalaNumerica', 'EscalaVisual', 'EscalaSmiles', 'EscalaVerbal', 'EscalaDepressao'],
