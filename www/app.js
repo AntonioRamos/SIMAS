@@ -75338,7 +75338,7 @@ var userItems = [
                                     selectValue = Ext.getCmp('filterSelectID').getValue();
 
                                 if (selectValue == "none") {
-                                    Ext.getCmp('dataViewAllResultsID').getStore().clearFilter();
+                                    sto.clearFilter();
                                 } else {
                                     sto.clearFilter();
                                     sto.filter('table', selectValue);
@@ -77884,7 +77884,7 @@ Ext.define('MyApp.view.DoctorAdmin', {
                         userID = record.data.id;
                         localStorage.setItem("userID", record.data.id);
                         localStorage.setItem("userID", record.data.id);
-                        console.log("localStorage:" + localStorage.getItem("userID") + "|record:" + record.data.id);
+                        //console.log("localStorage:" + localStorage.getItem("userID") + "|record:" + record.data.id);
 
                         Ext.device.Notification.show({
                             title: 'Irá entrar em modo utente',
@@ -77902,29 +77902,8 @@ Ext.define('MyApp.view.DoctorAdmin', {
 
                                 } else if (button === "verDados") {
 
-                                    if (Ext.Viewport.down('mainMenuViewSimple') === null) {
-
-                                        Ext.Viewport.add([
-                                            {'xtype': 'numericScale'},
-                                            {'xtype': 'visualScale'},
-                                            {'xtype': 'smilesScale'},
-                                            {'xtype': 'verbalScale'},
-                                            {'xtype': 'depressionView'},
-                                            {'xtype': 'depressionView2'},
-                                            {'xtype': 'depressionView3'},
-                                            {'xtype': 'depressionView4'},
-                                            {'xtype': 'depressionView5'}
-                                        ]);
-
-                                    }else{
-                                        Ext.Viewport.down('mainMenuViewSimple').destroy();
-                                    }
-
-                                    Ext.Viewport.add([
-                                        {'xtype': 'mainMenuViewSimple'}
-                                    ]);
-
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
+
                                     Ext.getCmp('dataViewAllResultsID').getStore().getProxy().setUrl('http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID"));
                                     Ext.getCmp('dataViewAllResultsID').getStore().load();
 
@@ -77933,9 +77912,6 @@ Ext.define('MyApp.view.DoctorAdmin', {
                                 }
                             }
                         });
-
-                        /*Ext.Viewport.setActiveItem(Ext.Viewport.down('adminSelectScales'));
-                         history.pushState(null, "");*/
                     }
                 }
             }
@@ -77953,6 +77929,181 @@ Ext.define('MyApp.view.DoctorAdmin', {
     }
 });
 
+
+Ext.define('MyApp.view.AdminSelScales', {
+    extend:  Ext.form.Panel ,
+    alias: 'widget.adminSelectScales',
+                                                                                                                     
+    config: {
+        layout: 'card',
+        items: [
+            {
+                title: 'Home',
+                iconCls: 'home',
+                styleHtmlContent: true,
+                scrollable: true,
+                id:'adminSelScales',
+                items: [
+                    {
+                        docked: 'top',
+                        xtype: 'titlebar',
+                        cls:'titleBar',
+                        title: 'Escolha da escala por utente',
+                        items: [
+                            {
+                                xtype: 'button',
+                                itemId: 'logOffButton',
+                                cls:"logoutButton",
+                                align: 'right'
+                            },
+                            {
+                                xtype: 'button',
+                                cls: 'bckButton',
+                                action: 'backView',
+                                align: 'left'
+                            }
+                        ]
+                    },
+                    {
+                        xtype: 'button',
+                        ui: 'normal',
+                        id: 'choosenNumeric',
+                        action: 'chooseNumeric'
+                    },
+                    {
+                        xtype: 'button',
+                        ui: 'normal',
+                        id: 'choosenAnalogic',
+                        action: 'chooseAnalogic'
+                    },
+                    {
+                        xtype: 'button',
+                        ui: 'normal',
+                        id: 'choosenVerbal',
+                        action: 'chooseVerbal'
+                    },
+                    {
+                        xtype: 'button',
+                        ui: 'normal',
+                        id: 'choosenSmiles',
+                        action: 'chooseSmiles'
+                    },
+                    {
+                        xtype: 'button',
+                        ui: 'normal',
+                        id: 'choosenDepression',
+                        action: 'chooseDepression'
+                    }
+                ]
+            }
+        ],
+        control: {
+            'button[action=backView]': {
+                tap: 'backButtonHandler'
+            },
+            'button[action=chooseNumeric]': {
+                tap: 'overwriteScale'
+            },
+            'button[action=chooseAnalogic]': {
+                tap: 'overwriteScale'
+            },
+            'button[action=chooseVerbal]': {
+                tap: 'overwriteScale'
+            },
+            'button[action=chooseSmiles]': {
+                tap: 'overwriteScale'
+            },
+            'button[action=chooseDepression]': {
+                tap: 'overwriteScale'
+            }
+        },
+        listeners: [
+            {
+                delegate: '#logOffButton',
+                event: 'tap',
+                fn: 'onLogOffButtonTap'
+            }
+        ]
+    },
+    backButtonHandler: function () {
+        Ext.getCmp('userDoctorID').getStore().load();
+        Ext.getCmp("userDoctorID").deselectAll();
+        Ext.Viewport.setActiveItem(Ext.Viewport.down('doctorAdmin'));
+        history.pushState(null, "");
+    },
+    overwriteScale: function (element) {
+        var tableName = "";
+
+        Ext.Viewport.setMasked({
+            xtype: 'loadmask',
+            message: 'A inserir...'
+        });
+
+        switch (element.id) {
+            case "choosenNumeric":
+                tableName = "tablenumeric";
+                break;
+            case "choosenAnalogic":
+                tableName = "tablevisual";
+                break;
+            case "choosenVerbal":
+                tableName = "tableverbal";
+                break;
+            case "choosenSmiles":
+                tableName = "tablesmiles";
+                break;
+            case "choosenDepression":
+                tableName = "tabledepression";
+                break;
+            default :
+                break
+        }
+
+        // TODO passar para o controlador
+        if (tableName != "") {
+            Ext.Ajax.request({
+                url: 'http://www.antonio-ramos.com/sencha/php/updateTableName.php',
+                useDefaultXhrHeader: false,
+                method: 'post',
+                params: {
+                    userID: userID,
+                    table: tableName
+                },
+                success: function (response) {
+
+                    var loginResponse = Ext.JSON.decode(response.responseText);
+
+                    if (loginResponse) {
+                        Ext.device.Notification.show({
+                            buttons: Ext.MessageBox.OK,
+                            message: 'A escala do utente foi alterada com sucesso'
+                        });
+                    } else {
+                        Ext.device.Notification.show({
+                             title: 'Erro',
+                             buttons: Ext.MessageBox.OK,
+                             message: 'Houve um erro ao alterar a sua escala'
+                         });
+                    }
+                    Ext.Viewport.setMasked(false);
+                },
+                failure: function(response, opts) {
+
+                    Ext.Viewport.setMasked(false);
+
+                    Ext.device.Notification.show({
+                        title: 'Erro',
+                        buttons: Ext.MessageBox.OK,
+                        message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
+                    });
+                }
+            });
+        }
+    },
+    onLogOffButtonTap: function () {
+        this.fireEvent('onSignOffCommand');
+    }
+});
 
 var userItems = [
     {
@@ -78217,181 +78368,6 @@ Ext.define('MyApp.view.MainSimple', {
 
 
 
-Ext.define('MyApp.view.AdminSelScales', {
-    extend:  Ext.form.Panel ,
-    alias: 'widget.adminSelectScales',
-                                                                                                                     
-    config: {
-        layout: 'card',
-        items: [
-            {
-                title: 'Home',
-                iconCls: 'home',
-                styleHtmlContent: true,
-                scrollable: true,
-                id:'adminSelScales',
-                items: [
-                    {
-                        docked: 'top',
-                        xtype: 'titlebar',
-                        cls:'titleBar',
-                        title: 'Escolha da escala por utente',
-                        items: [
-                            {
-                                xtype: 'button',
-                                itemId: 'logOffButton',
-                                cls:"logoutButton",
-                                align: 'right'
-                            },
-                            {
-                                xtype: 'button',
-                                cls: 'bckButton',
-                                action: 'backView',
-                                align: 'left'
-                            }
-                        ]
-                    },
-                    {
-                        xtype: 'button',
-                        ui: 'normal',
-                        id: 'choosenNumeric',
-                        action: 'chooseNumeric'
-                    },
-                    {
-                        xtype: 'button',
-                        ui: 'normal',
-                        id: 'choosenAnalogic',
-                        action: 'chooseAnalogic'
-                    },
-                    {
-                        xtype: 'button',
-                        ui: 'normal',
-                        id: 'choosenVerbal',
-                        action: 'chooseVerbal'
-                    },
-                    {
-                        xtype: 'button',
-                        ui: 'normal',
-                        id: 'choosenSmiles',
-                        action: 'chooseSmiles'
-                    },
-                    {
-                        xtype: 'button',
-                        ui: 'normal',
-                        id: 'choosenDepression',
-                        action: 'chooseDepression'
-                    }
-                ]
-            }
-        ],
-        control: {
-            'button[action=backView]': {
-                tap: 'backButtonHandler'
-            },
-            'button[action=chooseNumeric]': {
-                tap: 'overwriteScale'
-            },
-            'button[action=chooseAnalogic]': {
-                tap: 'overwriteScale'
-            },
-            'button[action=chooseVerbal]': {
-                tap: 'overwriteScale'
-            },
-            'button[action=chooseSmiles]': {
-                tap: 'overwriteScale'
-            },
-            'button[action=chooseDepression]': {
-                tap: 'overwriteScale'
-            }
-        },
-        listeners: [
-            {
-                delegate: '#logOffButton',
-                event: 'tap',
-                fn: 'onLogOffButtonTap'
-            }
-        ]
-    },
-    backButtonHandler: function () {
-        Ext.getCmp('userDoctorID').getStore().load();
-        Ext.getCmp("userDoctorID").deselectAll();
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('doctorAdmin'));
-        history.pushState(null, "");
-    },
-    overwriteScale: function (element) {
-        var tableName = "";
-
-        Ext.Viewport.setMasked({
-            xtype: 'loadmask',
-            message: 'A inserir...'
-        });
-
-        switch (element.id) {
-            case "choosenNumeric":
-                tableName = "tablenumeric";
-                break;
-            case "choosenAnalogic":
-                tableName = "tablevisual";
-                break;
-            case "choosenVerbal":
-                tableName = "tableverbal";
-                break;
-            case "choosenSmiles":
-                tableName = "tablesmiles";
-                break;
-            case "choosenDepression":
-                tableName = "tabledepression";
-                break;
-            default :
-                break
-        }
-
-        // TODO passar para o controlador
-        if (tableName != "") {
-            Ext.Ajax.request({
-                url: 'http://www.antonio-ramos.com/sencha/php/updateTableName.php',
-                useDefaultXhrHeader: false,
-                method: 'post',
-                params: {
-                    userID: userID,
-                    table: tableName
-                },
-                success: function (response) {
-
-                    var loginResponse = Ext.JSON.decode(response.responseText);
-
-                    if (loginResponse) {
-                        Ext.device.Notification.show({
-                            buttons: Ext.MessageBox.OK,
-                            message: 'A escala do utente foi alterada com sucesso'
-                        });
-                    } else {
-                        Ext.device.Notification.show({
-                             title: 'Erro',
-                             buttons: Ext.MessageBox.OK,
-                             message: 'Houve um erro ao alterar a sua escala'
-                         });
-                    }
-                    Ext.Viewport.setMasked(false);
-                },
-                failure: function(response, opts) {
-
-                    Ext.Viewport.setMasked(false);
-
-                    Ext.device.Notification.show({
-                        title: 'Erro',
-                        buttons: Ext.MessageBox.OK,
-                        message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
-                    });
-                }
-            });
-        }
-    },
-    onLogOffButtonTap: function () {
-        this.fireEvent('onSignOffCommand');
-    }
-});
-
 // http://miamicoder.com/2012/adding-a-login-screen-to-a-sencha-touch-application/
 
 Ext.define('MyApp.view.Login', {
@@ -78515,7 +78491,11 @@ Ext.define('MyApp.controller.Login', {
             doctorAdmin: 'doctorAdmin',
             adminSelectScales: 'adminSelectScales',
             depressionView: 'depressionView',
-            mainSimple: 'mainSimple'
+            depressionView2: 'depressionView2',
+            depressionView3: 'depressionView3',
+            depressionView4: 'depressionView4',
+            depressionView5: 'depressionView5',
+            mainMenuViewSimple: 'mainMenuViewSimple'
         },
         control: {
             loginView: {
@@ -78543,6 +78523,21 @@ Ext.define('MyApp.controller.Login', {
                 onSignOffCommand: 'onSignOffCommand'
             },
             depressionView: {
+                onSignOffCommand: 'onSignOffCommand'
+            },
+            depressionView2: {
+                onSignOffCommand: 'onSignOffCommand'
+            },
+            depressionView3: {
+                onSignOffCommand: 'onSignOffCommand'
+            },
+            depressionView4: {
+                onSignOffCommand: 'onSignOffCommand'
+            },
+            depressionView5: {
+                onSignOffCommand: 'onSignOffCommand'
+            },
+            mainMenuViewSimple: {
                 onSignOffCommand: 'onSignOffCommand'
             }
         }
@@ -78587,7 +78582,12 @@ Ext.define('MyApp.controller.Login', {
                     localStorage.setItem("username", username);
                     localStorage.setItem("userID", Ext.JSON.decode(response.responseText).userID);
                     localStorage.setItem("userType", Ext.JSON.decode(response.responseText).userType);
-                    me.signInSuccess();
+
+                    var task = Ext.create('Ext.util.DelayedTask', function () {
+                        me.signInSuccess();
+                    });
+                    task.delay(500);
+
 
                 } else {
                     me.signInFailure('Ocorreu uma falha no login. Por favor, tente novamente.');
@@ -78601,7 +78601,10 @@ Ext.define('MyApp.controller.Login', {
     },
 
     signInSuccess: function () {
-        window.location.reload();
+        var task = Ext.create('Ext.util.DelayedTask', function () {
+            window.location.reload();
+        });
+        task.delay(500);
     },
 
     signInFailure: function (message) {
@@ -78611,8 +78614,6 @@ Ext.define('MyApp.controller.Login', {
     },
 
     onSignOffCommand: function () {
-
-        window.location.reload();
 
         localStorage.removeItem("loginstatus");
         localStorage.removeItem("username");
@@ -78631,6 +78632,11 @@ Ext.define('MyApp.controller.Login', {
         localStorage.removeItem("question10");
         localStorage.removeItem("childAge");
 
+        var task = Ext.create('Ext.util.DelayedTask', function () {
+            window.location.reload();
+        });
+
+        task.delay(500);
 
     }
 });
@@ -78674,8 +78680,9 @@ Ext.define('MyApp.controller.EscalaNumerica', {
 
                 if (loginResponse) {
                    Ext.device.Notification.show({
+                        title: 'Confirmação',
                         buttons: Ext.MessageBox.OK,
-                        message: 'A sua escala foi inserida com sucesso'
+                        message: 'A sua resposta foi registada'
                     });
 //                    Ext.Msg.alert('Informação', 'A escala deste utente foi alterada');
 //                    Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
@@ -78744,9 +78751,9 @@ Ext.define('MyApp.controller.EscalaVisual', {
                 if (loginResponse) {
                     Ext.device.Notification.show({
                         buttons: Ext.MessageBox.OK,
-                        message: 'A sua escala foi inserida com sucesso'
+                        message: 'A sua resposta foi registada'
                     });
-//                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
+//                    Ext.Msg.alert('Informação', 'A sua resposta foi registada');
 //                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
@@ -78814,9 +78821,9 @@ Ext.define('MyApp.controller.EscalaSmiles', {
                 if (loginResponse) {
                     Ext.device.Notification.show({
                         buttons: Ext.MessageBox.OK,
-                        message: 'A sua escala foi inserida com sucesso'
+                        message: 'A sua resposta foi registada'
                     });
-//                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
+//                    Ext.Msg.alert('Informação', 'A sua resposta foi registada');
 //                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
@@ -78888,9 +78895,9 @@ Ext.define('MyApp.controller.EscalaVerbal', {
                 if (loginResponse) {
                     Ext.device.Notification.show({
                         buttons: Ext.MessageBox.OK,
-                        message: 'A sua escala foi inserida com sucesso (Desktop)'
+                        message: 'A sua resposta foi registada (Desktop)'
                     });
-//                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
+//                    Ext.Msg.alert('Informação', 'A sua resposta foi registada');
 //                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
@@ -78944,9 +78951,9 @@ Ext.define('MyApp.controller.EscalaVerbal', {
                 if (loginResponse) {
                     Ext.device.Notification.show({
                         buttons: Ext.MessageBox.OK,
-                        message: 'A sua escala foi inserida com sucesso (Device)'
+                        message: 'A sua resposta foi registada (Device)'
                     });
-//                    Ext.Msg.alert('Informação', 'A sua escala foi inserida com sucesso');
+//                    Ext.Msg.alert('Informação', 'A sua resposta foi registada');
 //                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
@@ -79031,7 +79038,7 @@ Ext.define('MyApp.controller.EscalaDepressao', {
                 if (loginResponse) {
                    Ext.device.Notification.show({
                         buttons: Ext.MessageBox.OK,
-                        message: 'A sua escala foi inserida com sucesso'
+                        message: 'A sua resposta foi registada'
                     });
 //                    Ext.Msg.alert('Informação', 'A escala deste utente foi alterada');
 //                    Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
@@ -79099,17 +79106,6 @@ Ext.define('MyApp.controller.EscalaDepressao', {
 
 });
 
-/*
- This file is generated and updated by Sencha Cmd. You can edit this file as
- needed for your application, but these edits will have to be merged by
- Sencha Cmd when it performs code generation tasks such as generating new
- models, controllers or views and when running "sencha app upgrade".
-
- Ideally changes to this file would be limited and most work would be done
- in other places (such as Controllers). If Sencha Cmd cannot merge your
- changes and its generated code, it will produce a "merge conflict" that you
- will need to resolve manually.
- */
 
 Ext.application({
     name: 'MyApp',
@@ -79120,7 +79116,6 @@ Ext.application({
       
 
     isOnline: false,
-//    MyApp.app.isOnline
 
     views: [
         'Login',
@@ -79140,7 +79135,6 @@ Ext.application({
     ],
 
     controllers: ['Login', 'EscalaNumerica', 'EscalaVisual', 'EscalaSmiles', 'EscalaVerbal', 'EscalaDepressao'],
-//    controllers:['EscalaNumerica','EscalaVisual','EscalaSmiles','EscalaVerbal'],
 
     icon: {
         '57': 'resources/icons/Icon.png',
@@ -79184,7 +79178,17 @@ Ext.application({
             } else if (localStorage.getItem("userType") == 'd') {
                 Ext.Viewport.add([
                     {'xtype': 'doctorAdmin'},
-                    {'xtype': 'adminSelectScales'}
+                    {'xtype': 'adminSelectScales'},
+                    {'xtype': 'mainMenuViewSimple'},
+                    {'xtype': 'numericScale'},
+                    {'xtype': 'visualScale'},
+                    {'xtype': 'smilesScale'},
+                    {'xtype': 'verbalScale'},
+                    {'xtype': 'depressionView'},
+                    {'xtype': 'depressionView2'},
+                    {'xtype': 'depressionView3'},
+                    {'xtype': 'depressionView4'},
+                    {'xtype': 'depressionView5'}
                 ]);
             }
         } else {
