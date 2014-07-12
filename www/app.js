@@ -77823,11 +77823,18 @@ Ext.define('MyApp.view.DoctorAdmin', {
                             message: 'Escolha uma das seguintes opções:',
                             callback: function (button) {
                                 if (button.toLowerCase() === "alterar escala") {
+//                                    Ext.Viewport.add([
+//                                        {'xtype': 'mainMenuViewSimple'}
+//                                    ]);
 
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('adminSelectScales'));
                                     history.pushState(null, "");
 
                                 }  else if (button.toLowerCase() === "inserir valor") {
+//                                    Ext.Viewport.add([
+//                                        {'xtype': 'mainMenuViewSimple'}
+//                                    ]);
+
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
                                     history.pushState(null, "");
 
@@ -78039,8 +78046,8 @@ var userItems = [
                     message: 'A carregar a sua lista...'
                 },
                 store: {
-                    autoLoad: true,
-                    clearOnLoad:true,
+//                    autoLoad: true,
+//                    clearOnLoad:true,
                     sorters: [
                         {
                             property: 'hora',
@@ -78144,6 +78151,7 @@ Ext.define('MyApp.view.MainSimple', {
     backButtonHandler: function () {
         Ext.Viewport.setActiveItem(Ext.Viewport.down('doctorAdmin'));
         history.pushState(null, "");
+//        Ext.Viewport.down('mainMenuViewSimple').destroy();
     },
     onLogOffButtonTap: function () {
         this.fireEvent('onSignOffCommand');
@@ -78550,6 +78558,7 @@ Ext.define('MyApp.controller.EscalaNumerica', {
                     });
                 }
                 Ext.Viewport.setMasked(false);
+                Ext.getCmp('dataViewAllResultsID').getStore().load();
             },
             failure: function(response, opts) {
 
@@ -78619,6 +78628,7 @@ Ext.define('MyApp.controller.EscalaVisual', {
                 }
 
                 Ext.Viewport.setMasked(false);
+                Ext.getCmp('dataViewAllResultsID').getStore().load();
             },
             failure: function(response, opts) {
 
@@ -78687,6 +78697,7 @@ Ext.define('MyApp.controller.EscalaSmiles', {
                     });
                 }
                 Ext.Viewport.setMasked(false);
+                Ext.getCmp('dataViewAllResultsID').getStore().load();
             },
             failure: function(response, opts) {
 
@@ -78758,6 +78769,7 @@ Ext.define('MyApp.controller.EscalaVerbal', {
                     });
                 }
                 Ext.Viewport.setMasked(false);
+                Ext.getCmp('dataViewAllResultsID').getStore().load();
             },
             failure: function(response, opts) {
 
@@ -78902,6 +78914,7 @@ Ext.define('MyApp.controller.EscalaDepressao', {
                     });
                 }
                 Ext.Viewport.setMasked(false);
+                Ext.getCmp('dataViewAllResultsID').getStore().load();
             },
             failure: function(response, opts) {
 
@@ -79070,8 +79083,8 @@ Ext.application({
         'EscalaDepressao2',
         'EscalaDepressao3',
         'EscalaDepressao4',
-        'EscalaDepressao5',
-        'MainSimple'
+        'EscalaDepressao5'
+        ,'MainSimple'
     ],
 
     controllers: ['Login', 'EscalaNumerica', 'EscalaVisual', 'EscalaSmiles', 'EscalaVerbal', 'EscalaDepressao','AdminSelScales'],
