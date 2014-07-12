@@ -77816,25 +77816,26 @@ Ext.define('MyApp.view.DoctorAdmin', {
                         Ext.device.Notification.show({
                             title: 'Irá entrar em modo utente',
                             buttons: [
-                                {text: 'Alterar escala', itemId: '1'},
-                                {text: 'Inserir valor', itemId: '2'}
+                                {text: 'Alterar escala', itemId: 'Alterar escala', ui: 'action'},
+                                {text: 'Inserir valor', itemId: 'Inserir valor', ui: 'action'},
+                                {text: 'Fechar', itemId: 'Fechar' }
                             ],
                             message: 'Escolha uma das seguintes opções:',
                             callback: function (button) {
-                                localStorage.setItem("button",button);
-                                if (button === "1") {
+                                if (button.toLowerCase() === "alterar escala") {
 
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('adminSelectScales'));
                                     history.pushState(null, "");
 
-                                }  else {
+                                }  else if (button.toLowerCase() === "inserir valor") {
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
                                     history.pushState(null, "");
 
-                                    Ext.getCmp("userDoctorID").deselectAll();
                                     Ext.getCmp('dataViewAllResultsID').getStore().getProxy().setUrl('http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID")+"&user="+localStorage.getItem('username')+"&pwd="+localStorage.getItem('pwd'));
                                     Ext.getCmp('dataViewAllResultsID').getStore().load();
-
+                                }
+                                else{
+                                    Ext.getCmp("userDoctorID").deselectAll();
                                 }
                             }
                         });
