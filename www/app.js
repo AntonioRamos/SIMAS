@@ -77834,9 +77834,8 @@ Ext.define('MyApp.view.DoctorAdmin', {
                                     Ext.getCmp('dataViewAllResultsID').getStore().getProxy().setUrl('http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID")+"&user="+localStorage.getItem('username')+"&pwd="+localStorage.getItem('pwd'));
                                     Ext.getCmp('dataViewAllResultsID').getStore().load();
                                 }
-                                else{
-                                    Ext.getCmp("userDoctorID").deselectAll();
-                                }
+
+                                Ext.getCmp("userDoctorID").deselectAll();
                             }
                         });
                     }
@@ -78111,7 +78110,6 @@ var userItems = [
                         ui: 'decline',
                         align: 'right',
                         handler: function () {
-                            alert(localStorage.getItem("button"));
                             Ext.getCmp('dataViewAllResultsID').getStore().clearFilter();
                             Ext.getCmp('filterSelectID').setValue("none");
                         }
