@@ -77821,6 +77821,7 @@ Ext.define('MyApp.view.DoctorAdmin', {
                             ],
                             message: 'Escolha uma das seguintes opções:',
                             callback: function (button) {
+                                localStorage.setItem("button",button);
                                 if (button === "1") {
 
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('adminSelectScales'));
@@ -78109,6 +78110,7 @@ var userItems = [
                         ui: 'decline',
                         align: 'right',
                         handler: function () {
+                            alert(localStorage.getItem("button"));
                             Ext.getCmp('dataViewAllResultsID').getStore().clearFilter();
                             Ext.getCmp('filterSelectID').setValue("none");
                         }
