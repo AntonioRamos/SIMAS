@@ -77821,8 +77821,6 @@ Ext.define('MyApp.view.EscalaDepressao5', {
     }
 });
 
-// https://github.com/tomalex0/senchatouch-complex-dataitem
-
 var userID = 0;
 
 Ext.define('MyApp.view.DoctorAdmin', {
@@ -77899,17 +77897,22 @@ Ext.define('MyApp.view.DoctorAdmin', {
 
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('adminSelectScales'));
                                     history.pushState(null, "");
+                                    alert("0");
 
                                 } else if (button === "verDados") {
+                                    alert("1");
 
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
+                                    history.pushState(null, "");
 
                                     Ext.getCmp('dataViewAllResultsID').getStore().getProxy().setUrl('http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID"));
                                     Ext.getCmp('dataViewAllResultsID').getStore().load();
 
                                 } else {
+                                    alert("2");
                                     Ext.getCmp("userDoctorID").deselectAll();
                                 }
+                                alert("3");
                             }
                         });
                     }
