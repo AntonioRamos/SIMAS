@@ -77893,13 +77893,13 @@ Ext.define('MyApp.view.DoctorAdmin', {
                             ],
                             message: 'Escolha uma das seguintes opções:',
                             callback: function (button) {
-                                if (button === "alterar") {
+                                if (button == "alterar") {
 
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('adminSelectScales'));
                                     history.pushState(null, "");
                                     alert("0");
 
-                                } else if (button === "no") {
+                                } else if (button == "no") {
                                     alert("1");
 
 
@@ -77907,7 +77907,7 @@ Ext.define('MyApp.view.DoctorAdmin', {
 
                                 } else {
                                     alert("2");
-                                    
+
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
                                     history.pushState(null, "");
 
