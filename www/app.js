@@ -77816,12 +77816,12 @@ Ext.define('MyApp.view.DoctorAdmin', {
                         Ext.device.Notification.show({
                             title: 'Irá entrar em modo utente',
                             buttons: [
-                                {text: 'Alterar escala', itemId: 'alterar', ui: 'action'},
-                                {text: 'Inserir valor', itemId: 'verdados', ui: 'action'}
+                                {text: 'Alterar escala', itemId: 'alterar'},
+                                {text: 'Inserir valor', itemId: 'verdados'}
                             ],
                             message: 'Escolha uma das seguintes opções:',
                             callback: function (button) {
-                                if (button == "alterar") {
+                                if (button === "alterar") {
 
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('adminSelectScales'));
                                     history.pushState(null, "");
