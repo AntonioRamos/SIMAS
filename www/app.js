@@ -75300,7 +75300,7 @@ var userItems = [
                     },
                     proxy: {
                         type: 'jsonp',
-                        url: 'http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID"),
+                        url: 'http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID")+"&user="+localStorage.getItem('username')+"&pwd="+localStorage.getItem('pwd'),
                         reader: {
                             type: 'json',
                             rootProperty: 'data'
@@ -75490,6 +75490,8 @@ Ext.define('MyApp.view.Main', {
             method: 'post',
             useDefaultXhrHeader: false,
             params: {
+                user: localStorage.getItem('username'),
+                pwd: localStorage.getItem('pwd'),
                 userID: localStorage.getItem("userID")
             },
             success: function (response) {
@@ -75515,8 +75517,16 @@ Ext.define('MyApp.view.Main', {
                         Ext.Viewport.setActiveItem(Ext.Viewport.down('depressionView'));
                         history.pushState(null, "");
                         break;
+                    case "null":
+                        Ext.device.Notification.show({
+                            title: 'Erro',
+                            buttons: Ext.MessageBox.OK,
+                            message: 'Erro de login'
+                        });
+                        break;
                     default:
                         Ext.device.Notification.show({
+                            title: 'Informação',
                             buttons: Ext.MessageBox.OK,
                             message: 'Esta é a sua primeira inserção. Escolha no menu lateral a escala pretendida...'
                         });
@@ -75533,25 +75543,8 @@ Ext.define('MyApp.view.Main', {
                     buttons: Ext.MessageBox.OK,
                     message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
                 });
-//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
-    },
-    pushViewFunction_1: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('numericScale'));
-        history.pushState(null, "");
-    },
-    pushViewFunction_2: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('verbalScale'));
-        history.pushState(null, "");
-    },
-    pushViewFunction_3: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('visualScale'));
-        history.pushState(null, "");
-    },
-    pushViewFunction_4: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('smilesScale'));
-        history.pushState(null, "");
     }
 });
 
@@ -76256,16 +76249,6 @@ Ext.define('MyApp.view.EscalaSmiles', {
             }
         ]
     },
-    initialize: function () {
-        // Add a Listener. Listen for [Viewport ~ Orientation] Change.
-        Ext.Viewport.on('orientationchange', 'handleOrientationChange', this, {buffer: 50 });
-        this.callParent(arguments);
-    },
-    handleOrientationChange: function(viewport, orientation, width, height){
-        console.log('rpc.view.home.indexView ~ handleOrientationChange');
-        // Execute the code that needs to fire on Orientation Change.
-//        alert('o:' + orientation + ' w:' + width + ' h:' + height);
-    },
     backButtonHandler: function () {
         if (localStorage.getItem("doctorID") === 'd') {
             Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
@@ -76279,6 +76262,7 @@ Ext.define('MyApp.view.EscalaSmiles', {
     }
 });
 
+// http://typedarray.org/from-microphone-to-wav-with-getusermedia-and-web-audio/
 // variables
 var leftchannel = [];
 var rightchannel = [];
@@ -76290,7 +76274,6 @@ var audioInput = null;
 var sampleRate = 44100;
 var audioContext = null;
 var context = null;
-//var outputElement = document.getElementById("titleBarScaleVerbal").getElementsByClassName("x-innerhtml")[0];
 var outputElement = document.getElementById("titleBarScaleVerbal");
 var outputString;
 
@@ -76369,8 +76352,6 @@ function success(e){
     recordingLength = 0;
     var outputElement = document.getElementById("titleBarScaleVerbal").getElementsByClassName("x-innerhtml")[0];
     outputElement.innerHTML = 'A gravar... Carregue "S" para parar...';
-//                document.getElementById("ext-element-332").innerHTML = 'Parar';
-//    document.getElementById("ext-element-330").style.visibility = 'hidden';
 }
 
 Ext.define('MyApp.view.EscalaVerbal', {
@@ -76454,7 +76435,6 @@ Ext.define('MyApp.view.EscalaVerbal', {
 
         var me = this;
 
-//        if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry|IEMobile)/)) {
         if (typeof(Ext.os.is.Desktop)=='undefined') {
             Ext.device.Capture.captureAudio({
                 limit: 1, // limit to 2 recordings
@@ -76462,55 +76442,10 @@ Ext.define('MyApp.view.EscalaVerbal', {
                 destination:'data',
                 success: function (base64) {
 
-                    /*Ext.device.Notification.show({
-                        title: 'Informação',
-                        buttons: Ext.MessageBox.OK,
-                        message: base64
-                    });*/
-
                     var userID = 1;
                     var mimeType = 'audio/mp4';
 
-                    // let's save it
-//                    outputElement.innerHTML = 'A gravar o ficheiro...';
-//                    var url = (window.URL || window.webkitURL).createObjectURL(blob);
-
                     me.fireEvent('onSubmitCommandDevice', me, base64, userID,mimeType);
-
-                    /*for (var i = 0; i < files.length; i++) {
-                        Ext.device.Notification.show({
-                            title: 'Informação',
-                            buttons: Ext.MessageBox.OK,
-                            message: 'Captured audio path: '+ files[i].fullPath
-                        });
-//                        console.log('Captured audio path: ', files[i].fullPath);
-//                        var r = new FileReader();
-//                        r.readAsBinaryString(files[i].fullPath);
-                        var reader = new FileReader();
-                        reader.onloadend = function(evt) {
-                            console.log("read success");
-                            console.log(evt.target.result);
-                        };
-                        reader.readAsDataURL(files[i].fullPath);
-
-                        var blob = new Blob ( [ files[i].fullPath ], { type : 'audio/mp4' } );
-
-                        // new sencha
-                        var userID = 1;
-                        var mimeType = 'audio/mp4';
-
-                        // let's save it
-                        outputElement.innerHTML = 'A gravar o ficheiro...';
-                        var url = (window.URL || window.webkitURL).createObjectURL(blob);
-
-                        me.fireEvent('onSubmitCommandDevice', me, url, userID,mimeType);
-
-                        Ext.device.Notification.show({
-                            title: 'Informação',
-                            buttons: Ext.MessageBox.OK,
-                            message: 'done'
-                        });
-                    }*/
                 },
                 failure: function () {
                     console.log('Something went wrong!');
@@ -76518,7 +76453,7 @@ Ext.define('MyApp.view.EscalaVerbal', {
             });
         } else {
 
-            // todo http://typedarray.org/from-microphone-to-wav-with-getusermedia-and-web-audio/
+
 
             // feature detection
             if (!navigator.getUserMedia)
@@ -76539,8 +76474,6 @@ Ext.define('MyApp.view.EscalaVerbal', {
 
                     // we stop recording
                     recording = false;
-
-//                    outputElement.innerHTML = 'A criar o ficheiro wav ...';
 
                     // we flat the left and right channels down
                     var leftBuffer = mergeBuffers ( leftchannel, recordingLength );
@@ -76587,7 +76520,6 @@ Ext.define('MyApp.view.EscalaVerbal', {
                     var mimeType = 'audio/wav';
 
                     // let's save it
-//                    outputElement.innerHTML = 'A gravar o ficheiro...';
                     var url = (window.URL || window.webkitURL).createObjectURL(blob);
 
                     Ext.Viewport.setMasked({
@@ -76780,9 +76712,10 @@ Ext.define('MyApp.view.EscalaDepressao', {
                     var result = 0,
                         bol_submit = true,
                         getChildAge = Ext.getCmp("childAgeID").getValue(),
-                        bol_childAgeFilled = true,
                         question1 = 0,
                         question2 = 0;
+
+                    app.childAgeFilled = true;
 
                     for (var i = 1; i < 3; i++) {
 
@@ -76799,10 +76732,10 @@ Ext.define('MyApp.view.EscalaDepressao', {
                     }
 
                     if (getChildAge == "") {
-                        bol_childAgeFilled = false;
+                        app.childAgeFilled = false;
                     }
 
-                    if (bol_submit && bol_childAgeFilled) {
+                    if (bol_submit && app.childAgeFilled) {
 
                         var me = this,
                             userID = 1;
@@ -76821,9 +76754,8 @@ Ext.define('MyApp.view.EscalaDepressao', {
                     } else {
                         var str_message = "";
 
-                        if(!bol_childAgeFilled && !bol_submit){
+                        if(!app.childAgeFilled && !bol_submit){
                             str_message = 'Por favor, responda a todas as perguntas e preencha a idade da criança';
-//                            str_message = 'Por favor, preencha a idade da criança';
                         }else if(!bol_submit){
                             str_message = 'Por favor, responda a todas as perguntas';
                         }else{
@@ -77058,9 +76990,8 @@ Ext.define('MyApp.view.EscalaDepressao2', {
                     } else {
                         var str_message = "";
 
-                        if(!bol_childAgeFilled && !bol_submit){
+                        if(!app.childAgeFilled && !bol_submit){
                             str_message = 'Por favor, responda a todas as perguntas e preencha a idade da criança';
-//                            str_message = 'Por favor, preencha a idade da criança';
                         }else if(!bol_submit){
                             str_message = 'Por favor, responda a todas as perguntas';
                         }else{
@@ -77295,9 +77226,8 @@ Ext.define('MyApp.view.EscalaDepressao3', {
                     } else {
                         var str_message = "";
 
-                        if(!bol_childAgeFilled && !bol_submit){
+                        if(!app.childAgeFilled && !bol_submit){
                             str_message = 'Por favor, responda a todas as perguntas e preencha a idade da criança';
-//                            str_message = 'Por favor, preencha a idade da criança';
                         }else if(!bol_submit){
                             str_message = 'Por favor, responda a todas as perguntas';
                         }else{
@@ -77532,9 +77462,8 @@ Ext.define('MyApp.view.EscalaDepressao4', {
                     } else {
                         var str_message = "";
 
-                        if(!bol_childAgeFilled && !bol_submit){
+                        if(!app.childAgeFilled && !bol_submit){
                             str_message = 'Por favor, responda a todas as perguntas e preencha a idade da criança';
-//                            str_message = 'Por favor, preencha a idade da criança';
                         }else if(!bol_submit){
                             str_message = 'Por favor, responda a todas as perguntas';
                         }else{
@@ -77735,10 +77664,11 @@ Ext.define('MyApp.view.EscalaDepressao5', {
                     var result = 0,
                         bol_submit = true,
                         getChildAge = localStorage.getItem("childAge"),
-                        bol_childAgeFilled = true,
                         question9 = 0,
                         question10 = 0;
 
+
+                    app.childAgeFilled = true;
 
 
                     localStorage.setItem("question9",parseInt(Ext.ComponentQuery.query("radiofield[name=question9]")[0].getGroupValue()));
@@ -77758,10 +77688,10 @@ Ext.define('MyApp.view.EscalaDepressao5', {
                     }
 
                     if (getChildAge == "") {
-                        bol_childAgeFilled = false;
+                        app.childAgeFilled = false;
                     }
 
-                    if (bol_submit && bol_childAgeFilled) {
+                    if (bol_submit && app.childAgeFilled) {
 
                         var me = this,
                             userID = 1;
@@ -77776,7 +77706,7 @@ Ext.define('MyApp.view.EscalaDepressao5', {
                     } else {
                         var str_message = "";
 
-                        if(!bol_childAgeFilled && !bol_submit){
+                        if(!app.childAgeFilled && !bol_submit){
                             str_message = 'Por favor, responda a todas as perguntas e preencha a idade da criança';
                         }else if(!bol_submit){
                             str_message = 'Por favor, responda a todas as perguntas';
@@ -77866,7 +77796,7 @@ Ext.define('MyApp.view.DoctorAdmin', {
                     fields: ['id', 'name', 'tablename'],
                     proxy: {
                         type: 'jsonp',
-                        url: 'http://www.antonio-ramos.com/sencha/php/getUserDoctor.php?doctorID=' + localStorage.getItem("doctorID"),
+                        url: 'http://www.antonio-ramos.com/sencha/php/getUserDoctor.php?doctorID=' + localStorage.getItem("doctorID")+"&user="+localStorage.getItem('username')+"&pwd="+localStorage.getItem('pwd'),
                         reader: {
                             type: 'json',
                             rootProperty: 'data'
@@ -77882,14 +77812,12 @@ Ext.define('MyApp.view.DoctorAdmin', {
                         userID = record.data.id;
                         localStorage.setItem("userID", record.data.id);
                         localStorage.setItem("userID", record.data.id);
-                        //console.log("localStorage:" + localStorage.getItem("userID") + "|record:" + record.data.id);
 
                         Ext.device.Notification.show({
                             title: 'Irá entrar em modo utente',
                             buttons: [
-                                {text: 'Alterar', itemId: 'alterar', ui: 'action'},
-                                {text: 'Adicionar', itemId: 'verdados', ui: 'action'},
-                                {text: 'Nada', itemId: 'no'}
+                                {text: 'Alterar escala', itemId: 'alterar', ui: 'action'},
+                                {text: 'Inserir valor', itemId: 'verdados', ui: 'action'}
                             ],
                             message: 'Escolha uma das seguintes opções:',
                             callback: function (button) {
@@ -77897,26 +77825,16 @@ Ext.define('MyApp.view.DoctorAdmin', {
 
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('adminSelectScales'));
                                     history.pushState(null, "");
-                                    alert("0");
 
-                                } else if (button == "no") {
-                                    alert("1");
-
-
-                                    Ext.getCmp("userDoctorID").deselectAll();
-
-                                } else {
-                                    alert("2");
-
+                                }  else {
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
                                     history.pushState(null, "");
 
                                     Ext.getCmp("userDoctorID").deselectAll();
-                                    Ext.getCmp('dataViewAllResultsID').getStore().getProxy().setUrl('http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID"));
+                                    Ext.getCmp('dataViewAllResultsID').getStore().getProxy().setUrl('http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID")+"&user="+localStorage.getItem('username')+"&pwd="+localStorage.getItem('pwd'));
                                     Ext.getCmp('dataViewAllResultsID').getStore().load();
 
                                 }
-                                alert("3");
                             }
                         });
                     }
@@ -78039,73 +77957,7 @@ Ext.define('MyApp.view.AdminSelScales', {
         history.pushState(null, "");
     },
     overwriteScale: function (element) {
-        var tableName = "";
-
-        Ext.Viewport.setMasked({
-            xtype: 'loadmask',
-            message: 'A inserir...'
-        });
-
-        switch (element.id) {
-            case "choosenNumeric":
-                tableName = "tablenumeric";
-                break;
-            case "choosenAnalogic":
-                tableName = "tablevisual";
-                break;
-            case "choosenVerbal":
-                tableName = "tableverbal";
-                break;
-            case "choosenSmiles":
-                tableName = "tablesmiles";
-                break;
-            case "choosenDepression":
-                tableName = "tabledepression";
-                break;
-            default :
-                break
-        }
-
-        // TODO passar para o controlador
-        if (tableName != "") {
-            Ext.Ajax.request({
-                url: 'http://www.antonio-ramos.com/sencha/php/updateTableName.php',
-                useDefaultXhrHeader: false,
-                method: 'post',
-                params: {
-                    userID: userID,
-                    table: tableName
-                },
-                success: function (response) {
-
-                    var loginResponse = Ext.JSON.decode(response.responseText);
-
-                    if (loginResponse) {
-                        Ext.device.Notification.show({
-                            buttons: Ext.MessageBox.OK,
-                            message: 'A escala do utente foi alterada com sucesso'
-                        });
-                    } else {
-                        Ext.device.Notification.show({
-                             title: 'Erro',
-                             buttons: Ext.MessageBox.OK,
-                             message: 'Houve um erro ao alterar a sua escala'
-                         });
-                    }
-                    Ext.Viewport.setMasked(false);
-                },
-                failure: function(response, opts) {
-
-                    Ext.Viewport.setMasked(false);
-
-                    Ext.device.Notification.show({
-                        title: 'Erro',
-                        buttons: Ext.MessageBox.OK,
-                        message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
-                    });
-                }
-            });
-        }
+        this.fireEvent('overwriteScale',this,element.id);
     },
     onLogOffButtonTap: function () {
         this.fireEvent('onSignOffCommand');
@@ -78206,7 +78058,7 @@ var userItems = [
                         type: 'jsonp',
                         useDefaultXhrHeader: false,
                         disableCaching: true,
-                        url: 'http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID"),
+                        url: 'http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID")+"&user="+localStorage.getItem('username')+"&pwd="+localStorage.getItem('pwd'),
                         reader: {
                             type: 'json',
                             rootProperty: 'data'
@@ -78309,6 +78161,8 @@ Ext.define('MyApp.view.MainSimple', {
             method: 'post',
             useDefaultXhrHeader: false,
             params: {
+                user: localStorage.getItem('username'),
+                pwd: localStorage.getItem('pwd'),
                 userID: localStorage.getItem("userID")
             },
             success: function (response) {
@@ -78334,8 +78188,16 @@ Ext.define('MyApp.view.MainSimple', {
                         Ext.Viewport.setActiveItem(Ext.Viewport.down('depressionView'));
                         history.pushState(null, "");
                         break;
+                    case "null":
+                        Ext.device.Notification.show({
+                            title: 'Erro',
+                            buttons: Ext.MessageBox.OK,
+                            message: 'Erro de login'
+                        });
+                        break;
                     default:
                         Ext.device.Notification.show({
+                            title:'Informação',
                             buttons: Ext.MessageBox.OK,
                             message: 'Esta é a sua primeira inserção. Escolha no menu lateral a escala pretendida...'
                         });
@@ -78354,22 +78216,6 @@ Ext.define('MyApp.view.MainSimple', {
                 });
             }
         });
-    },
-    pushViewFunction_1: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('numericScale'));
-        history.pushState(null, "");
-    },
-    pushViewFunction_2: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('verbalScale'));
-        history.pushState(null, "");
-    },
-    pushViewFunction_3: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('visualScale'));
-        history.pushState(null, "");
-    },
-    pushViewFunction_4: function () {
-        Ext.Viewport.setActiveItem(Ext.Viewport.down('smilesScale'));
-        history.pushState(null, "");
     }
 });
 
@@ -78587,6 +78433,7 @@ Ext.define('MyApp.controller.Login', {
 
                     localStorage.setItem("loginstatus", true);
                     localStorage.setItem("username", username);
+                    localStorage.setItem("pwd", Ext.JSON.decode(response.responseText).pwd);
                     localStorage.setItem("userID", Ext.JSON.decode(response.responseText).userID);
                     localStorage.setItem("userType", Ext.JSON.decode(response.responseText).userType);
 
@@ -78602,7 +78449,6 @@ Ext.define('MyApp.controller.Login', {
             },
             failure: function (response, opts) {
                 me.signInFailure('Erro de comunicação. Por favor, verifique a sua ligação à internet.');
-//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     },
@@ -78638,6 +78484,8 @@ Ext.define('MyApp.controller.Login', {
         localStorage.removeItem("question9");
         localStorage.removeItem("question10");
         localStorage.removeItem("childAge");
+        localStorage.removeItem("childAge");
+        localStorage.removeItem("pwd");
 
         var task = Ext.create('Ext.util.DelayedTask', function () {
             window.location.reload();
@@ -78679,7 +78527,9 @@ Ext.define('MyApp.controller.EscalaNumerica', {
             params: {
                 result: result,
                 userID: num_userID,
-                table: 'tablenumeric'
+                table: 'tablenumeric',
+                user: localStorage.getItem('username'),
+                pwd: localStorage.getItem('pwd')
             },
             success: function (response) {
 
@@ -78691,15 +78541,12 @@ Ext.define('MyApp.controller.EscalaNumerica', {
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua resposta foi registada'
                     });
-//                    Ext.Msg.alert('Informação', 'A escala deste utente foi alterada');
-//                    Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
                         title: 'Erro',
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala'
                     });
-//                    Ext.Msg.alert('Informação', 'Houve um erro ao alterar a escala');
                 }
                 Ext.Viewport.setMasked(false);
             },
@@ -78712,7 +78559,6 @@ Ext.define('MyApp.controller.EscalaNumerica', {
                     buttons: Ext.MessageBox.OK,
                     message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
                 });
-//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     }
@@ -78749,7 +78595,9 @@ Ext.define('MyApp.controller.EscalaVisual', {
             params: {
                 result: result,
                 userID: num_userID,
-                table:'tablevisual'
+                table:'tablevisual',
+                user: localStorage.getItem('username'),
+                pwd: localStorage.getItem('pwd')
             },
             success: function (response) {
 
@@ -78757,18 +78605,16 @@ Ext.define('MyApp.controller.EscalaVisual', {
 
                 if (loginResponse) {
                     Ext.device.Notification.show({
+                        title:'Confirmação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua resposta foi registada'
                     });
-//                    Ext.Msg.alert('Informação', 'A sua resposta foi registada');
-//                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
                         title: 'Erro',
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala'
                     });
-//                    Ext.Msg.alert('Informação', 'Houve um erro ao inserir a sua escala');
                 }
 
                 Ext.Viewport.setMasked(false);
@@ -78782,7 +78628,6 @@ Ext.define('MyApp.controller.EscalaVisual', {
                     buttons: Ext.MessageBox.OK,
                     message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
                 });
-//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     }
@@ -78819,7 +78664,9 @@ Ext.define('MyApp.controller.EscalaSmiles', {
             params: {
                 result: result,
                 userID: num_userID,
-                table:'tablesmiles'
+                table:'tablesmiles',
+                user: localStorage.getItem('username'),
+                pwd: localStorage.getItem('pwd')
             },
             success: function (response) {
 
@@ -78827,18 +78674,16 @@ Ext.define('MyApp.controller.EscalaSmiles', {
 
                 if (loginResponse) {
                     Ext.device.Notification.show({
+                        title:'Confirmação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua resposta foi registada'
                     });
-//                    Ext.Msg.alert('Informação', 'A sua resposta foi registada');
-//                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
                         title: 'Erro',
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala'
                     });
-//                    Ext.Msg.alert('Informação', 'Houve um erro ao inserir a sua escala');
                 }
                 Ext.Viewport.setMasked(false);
             },
@@ -78851,7 +78696,6 @@ Ext.define('MyApp.controller.EscalaSmiles', {
                     buttons: Ext.MessageBox.OK,
                     message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
                 });
-//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     }
@@ -78871,8 +78715,6 @@ Ext.define('MyApp.controller.EscalaVerbal', {
         }
     },
 
-    // TODO - Verificar se não se pode juntar os dois
-
     onSubmitCommand: function (view, result, userID2,mimeType) {
 
         var me = this,
@@ -78890,6 +78732,8 @@ Ext.define('MyApp.controller.EscalaVerbal', {
             xhr2: true,
             useDefaultXhrHeader: false,
             params: {
+                user: localStorage.getItem('username'),
+                pwd: localStorage.getItem('pwd'),
                 resultBlob: result,
                 userID: num_userID,
                 table:'tableverbal',
@@ -78901,11 +78745,10 @@ Ext.define('MyApp.controller.EscalaVerbal', {
 
                 if (loginResponse) {
                     Ext.device.Notification.show({
+                        title:'Confirmação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua resposta foi registada (Desktop)'
                     });
-//                    Ext.Msg.alert('Informação', 'A sua resposta foi registada');
-//                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
                         title: 'Erro',
@@ -78924,7 +78767,6 @@ Ext.define('MyApp.controller.EscalaVerbal', {
                     buttons: Ext.MessageBox.OK,
                     message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
                 });
-//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     },
@@ -78949,7 +78791,9 @@ Ext.define('MyApp.controller.EscalaVerbal', {
                 resultBlob: result,
                 userID: num_userID,
                 table:'tableverbal',
-                mimeType:mimeType
+                mimeType:mimeType,
+                user: localStorage.getItem('username'),
+                pwd: localStorage.getItem('pwd')
             },
             success: function (response) {
 
@@ -78957,18 +78801,16 @@ Ext.define('MyApp.controller.EscalaVerbal', {
 
                 if (loginResponse) {
                     Ext.device.Notification.show({
+                        title:'Confirmação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua resposta foi registada (Device)'
                     });
-//                    Ext.Msg.alert('Informação', 'A sua resposta foi registada');
-//                    Ext.Viewport.setActiveItem({xtype:'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
                         title: 'Erro',
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala (Device)'
                     });
-//                    Ext.Msg.alert('Informação', 'Houve um erro ao inserir a sua escala');
                 }
                 Ext.Viewport.setMasked(false);
 
@@ -78982,7 +78824,6 @@ Ext.define('MyApp.controller.EscalaVerbal', {
                     buttons: Ext.MessageBox.OK,
                     message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
                 });
-//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     }
@@ -79028,6 +78869,8 @@ Ext.define('MyApp.controller.EscalaDepressao', {
             num_userID = userID;
         }
 
+
+
         Ext.Ajax.request({
             url: 'http://www.antonio-ramos.com/sencha/php/createResultEPDS.php',
             useDefaultXhrHeader: false,
@@ -79036,7 +78879,9 @@ Ext.define('MyApp.controller.EscalaDepressao', {
                 result: result,
                 userID: num_userID,
                 table: 'tabledepression',
-                childAge: childAge
+                childAge: childAge,
+                user: localStorage.getItem('username'),
+                pwd: localStorage.getItem('pwd')
             },
             success: function (response) {
 
@@ -79044,18 +78889,16 @@ Ext.define('MyApp.controller.EscalaDepressao', {
 
                 if (loginResponse) {
                    Ext.device.Notification.show({
+                       title:'Confirmação',
                         buttons: Ext.MessageBox.OK,
                         message: 'A sua resposta foi registada'
                     });
-//                    Ext.Msg.alert('Informação', 'A escala deste utente foi alterada');
-//                    Ext.Viewport.setActiveItem({xtype: 'mainMenuView'});
                 } else {
                     Ext.device.Notification.show({
                         title: 'Erro',
                         buttons: Ext.MessageBox.OK,
                         message: 'Houve um erro ao inserir a sua escala'
                     });
-//                    Ext.Msg.alert('Informação', 'Houve um erro ao alterar a escala');
                 }
                 Ext.Viewport.setMasked(false);
             },
@@ -79068,7 +78911,6 @@ Ext.define('MyApp.controller.EscalaDepressao', {
                     buttons: Ext.MessageBox.OK,
                     message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
                 });
-//                Ext.Msg.alert('Informação', 'server-side failure with status code'+ response.status);
             }
         });
     },
@@ -79113,6 +78955,94 @@ Ext.define('MyApp.controller.EscalaDepressao', {
 
 });
 
+Ext.define('MyApp.controller.AdminSelScales', {
+    extend:  Ext.app.Controller ,
+    config: {
+        refs: {
+            adminSelectScales: 'adminSelectScales'
+        },
+        control: {
+            adminSelectScales: {
+                overwriteScale: 'overwriteScale'
+            }
+        }
+    },
+
+    overwriteScale: function (view, elementID) {
+
+        var tableName = "";
+
+        view.setMasked({
+            xtype: 'loadmask',
+            message: 'A inserir...'
+        });
+
+        switch (elementID) {
+            case "choosenNumeric":
+                tableName = "tablenumeric";
+                break;
+            case "choosenAnalogic":
+                tableName = "tablevisual";
+                break;
+            case "choosenVerbal":
+                tableName = "tableverbal";
+                break;
+            case "choosenSmiles":
+                tableName = "tablesmiles";
+                break;
+            case "choosenDepression":
+                tableName = "tabledepression";
+                break;
+            default :
+                break
+        }
+
+        if (tableName != "") {
+            Ext.Ajax.request({
+                url: 'http://www.antonio-ramos.com/sencha/php/updateTableName.php',
+                useDefaultXhrHeader: false,
+                method: 'post',
+                params: {
+                    userID: userID,
+                    table: tableName,
+                    user: localStorage.getItem('username'),
+                    pwd: localStorage.getItem('pwd')
+                },
+                success: function (response) {
+
+                    var loginResponse = Ext.JSON.decode(response.responseText);
+
+                    if (loginResponse) {
+                        Ext.device.Notification.show({
+                            title: 'Confirmação',
+                            buttons: Ext.MessageBox.OK,
+                            message: 'A escala do utente foi alterada com sucesso'
+                        });
+                    } else {
+                        Ext.device.Notification.show({
+                            title: 'Erro',
+                            buttons: Ext.MessageBox.OK,
+                            message: 'Houve um erro ao alterar a sua escala'
+                        });
+                    }
+                    view.setMasked(false);
+                },
+                failure: function(response, opts) {
+
+                    view.setMasked(false);
+
+                    Ext.device.Notification.show({
+                        title: 'Erro',
+                        buttons: Ext.MessageBox.OK,
+                        message: 'Erro de comunicação. Por favor, verifique a sua ligação à internet.'
+                    });
+                }
+            });
+        }
+
+    }
+});
+
 
 Ext.application({
     name: 'MyApp',
@@ -79123,6 +79053,8 @@ Ext.application({
       
 
     isOnline: false,
+    childAgeFilled: false,
+    domain:'http://www.antonio-ramos.com/sencha',
 
     views: [
         'Login',
@@ -79141,7 +79073,7 @@ Ext.application({
         'MainSimple'
     ],
 
-    controllers: ['Login', 'EscalaNumerica', 'EscalaVisual', 'EscalaSmiles', 'EscalaVerbal', 'EscalaDepressao'],
+    controllers: ['Login', 'EscalaNumerica', 'EscalaVisual', 'EscalaSmiles', 'EscalaVerbal', 'EscalaDepressao','AdminSelScales'],
 
     icon: {
         '57': 'resources/icons/Icon.png',
