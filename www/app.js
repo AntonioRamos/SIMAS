@@ -77888,7 +77888,7 @@ Ext.define('MyApp.view.DoctorAdmin', {
                             title: 'Irá entrar em modo utente',
                             buttons: [
                                 {text: 'Alterar', itemId: 'alterar', ui: 'action'},
-                                {text: 'Adicionar', itemId: 'verDados', ui: 'action'},
+                                {text: 'Adicionar', itemId: 'verdados', ui: 'action'},
                                 {text: 'Nada', itemId: 'no'}
                             ],
                             message: 'Escolha uma das seguintes opções:',
@@ -77899,12 +77899,13 @@ Ext.define('MyApp.view.DoctorAdmin', {
                                     history.pushState(null, "");
                                     alert("0");
 
-                                } else if (button === "verDados") {
+                                } else if (button === "verdados") {
                                     alert("1");
 
                                     Ext.Viewport.setActiveItem(Ext.Viewport.down('mainMenuViewSimple'));
                                     history.pushState(null, "");
 
+                                    Ext.getCmp("userDoctorID").deselectAll();
                                     Ext.getCmp('dataViewAllResultsID').getStore().getProxy().setUrl('http://www.antonio-ramos.com/sencha/php/getAllResults.php?userID=' + localStorage.getItem("userID"));
                                     Ext.getCmp('dataViewAllResultsID').getStore().load();
 
